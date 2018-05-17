@@ -107,7 +107,7 @@ def manage(packet):
     else:
       methodName = dstDir[dataString]
   except Exception, e:
-    pass
+    logging.debug("Exception from packet manager [%s]" % e)
     
   result = None
   if methodName != None:

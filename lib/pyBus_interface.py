@@ -70,7 +70,7 @@ class ibusFace ( ):
     oldTime = time.time()
     while True:
       # Wait for large interval between packets
-      swallow_char = self.readChar() # will be src packet if there was a significant delay between packets. Otherwise its nothing useful
+      self.readChar() # will be src packet if there was a significant delay between packets. Otherwise its nothing useful
       newTime = time.time()
       deltaTime = newTime - oldTime
       oldTime = newTime
@@ -120,7 +120,7 @@ class ibusFace ( ):
     char = self.SDEV.read(1)
     try:
       char = '%02X' % ord(char)
-    except SerialException, e: 
+    except serial.SerialException, e: 
       logging.warning("Hit a serialException: %s" % e)
       pass
     return char

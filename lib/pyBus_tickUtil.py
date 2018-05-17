@@ -3,8 +3,8 @@
 import os, sys, time, signal, json, logging, traceback
 import threading
 
-import pyBus_module_display as pB_display # Only events can manipulate the display stack
-import pyBus_module_audio as pB_audio # Add the audio module as it will only be manipulated from here in pyBus
+#import pyBus_module_display as pB_display # Only events can manipulate the display stack
+#import pyBus_module_audio as pB_audio # Add the audio module as it will only be manipulated from here in pyBus
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
@@ -96,13 +96,17 @@ def revive(funcName):
 # Tick Functions
 #####################################
 def scanForward():
-  pB_audio.seek(10)
+  #pB_audio.seek(10)
+  pass
   
 def scanBackward():
-  pB_audio.seek(-10)  
+  #pB_audio.seek(-10)  
+  pass
 
 def pollResponse():
-  WRITER.writeBusPacket('18', 'FF', ['02','00'])
+  #WRITER.writeBusPacket('18', 'FF', ['02','00'])
+  pass
 
 def announce():
-  WRITER.writeBusPacket('18', 'FF', ['02', '01'])
+  #WRITER.writeBusPacket('18', 'FF', ['02', '01'])
+  pass
