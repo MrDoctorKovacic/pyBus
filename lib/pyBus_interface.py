@@ -27,7 +27,7 @@ LOCATIONS = {
   '9B' : 'Mirror Memory Second',
   '9C' : 'Mirror Memory Third',
   'A0' : 'Rear Multi Info Display',
-  'A4' : 'Ai rBag Module',
+  'A4' : 'Air Bag Module',
   'B0' : 'Speed Recognition System',
   'BB' : 'Navigation Japan',
   'BF' : 'Global Broadcas tAddress',
@@ -80,7 +80,7 @@ class ibusFace ( ):
 
     packetLength = self.readChar() # len packet
     self.readChar() # dst packet
-    dataLen = int(packetLength, 16) - 2 # Determind length of this packet from the packetLength variable, then swallow that
+    dataLen = int(packetLength, 16) - 2 # Determine length of this packet from the packetLength variable, then swallow that
     while dataLen > 0:
       self.readChar()
       dataLen = dataLen - 1
