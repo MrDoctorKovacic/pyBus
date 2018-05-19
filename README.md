@@ -7,7 +7,7 @@ iBus interface for my E46 BMW written in Python
 This is to be used with the USB interface which can be acquired from [Reslers.de](http://www.reslers.de/IBUS/)
 
 ## Overview
-The main component:
+The main component:  
 **pyBus.py** - interfaces with the iBus to send and receive button presses and vehicle status changes
 
 ### Useful links
