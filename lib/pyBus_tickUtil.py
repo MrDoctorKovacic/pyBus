@@ -2,6 +2,7 @@
 
 import os, sys, time, signal, json, logging, traceback
 import threading
+import pyBus_bluetooth as pB_bt
 
 #import pyBus_module_display as pB_display # Only events can manipulate the display stack
 #import pyBus_module_audio as pB_audio # Add the audio module as it will only be manipulated from here in pyBus
@@ -39,7 +40,7 @@ def shutDown():
   logging.info("Dereferencing iBus interface")
   WRITER = None
 
-def enableFunc(funcName, interval, count=0):
+def enableFunc(funcName, interval, count=0, arguments=[]):
   global FUNC_STACK
 
   # Cancel Thread if it already exists.
@@ -58,7 +59,12 @@ def enableFunc(funcName, interval, count=0):
     }
     logging.debug("Enabling New Thread:\n%s %s" % (funcName, FUNC_STACK[funcName]))
     worker_func = getattr(sys.modules[__name__], funcName)
-    worker_func()
+
+    try:
+      worker_func(arguments) # must know what arguments are in advance to implement in utility functions
+    except Exception, e:
+      logging.error("Error in threaded function %s. Caught exception:\n%s", funcName, e)
+
     FUNC_STACK[funcName]["THREAD"].start()
   else:
     logging.warning("No function found (%s)" % funcName)
@@ -95,18 +101,24 @@ def revive(funcName):
 #####################################
 # Tick Functions
 #####################################
-def scanForward():
+def scanForward(arguments):
   #pB_audio.seek(10)
   pass
   
-def scanBackward():
+def scanBackward(arguments):
   #pB_audio.seek(-10)  
   pass
 
-def pollResponse():
+def pollResponse(arguments):
   #WRITER.writeBusPacket('18', 'FF', ['02','00'])
   pass
 
-def announce():
+def announce(arguments):
   #WRITER.writeBusPacket('18', 'FF', ['02', '01'])
   pass
+
+def sendBluetooth(arguments):
+  pB_bt.sendMessage(arguments[0], arguments[1])
+
+def scanBluetooth(arguments):
+  pB_bt.findNearbyDevices()
