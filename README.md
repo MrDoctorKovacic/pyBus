@@ -1,6 +1,6 @@
 pyBus
 =====
-## Forked from ezeakeal's excellent [pyBus](https://github.com/ezeakeal/pyBus)
+### Forked from ezeakeal's excellent [pyBus](https://github.com/ezeakeal/pyBus)
 
 iBus interface for my E46 BMW written in Python  
 This is to be used with the USB interface which can be acquired from [Reslers.de](http://www.reslers.de/IBUS/)
