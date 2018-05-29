@@ -9,8 +9,6 @@ import random
 import logging
 import traceback
 
-#import pyBus_module_display as pB_display # Only events can manipulate the display stack
-#import pyBus_module_audio as pB_audio # Add the audio module as it will only be manipulated from here in pyBus
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
@@ -30,6 +28,20 @@ DIRECTIVES = {
   '44' : {
     'BF' : {
       '7401FF' : 'd_keyOut'
+    }
+  },
+  '50' : {
+    '68' : {
+      '3210' : 'd_volumeDown',
+      '3211' : 'd_volumeUp',
+      '3B01' : 'd_steeringNext',
+      '3B21' : 'd_steeringNext',
+      '3B08' : 'd_steeringPrev',
+      '3B28' : 'd_steeringPrev'
+    },
+    'C8' : {
+      '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
+      '3B40' : 'd_RESET'
     }
   },
   '80' : {
@@ -59,10 +71,10 @@ DIRECTIVES = {
       '380801' : ''
     }
   },
-  '50' : {
-    'C8' : {
-      '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
-      '3B40' : 'd_RESET'
+  '9C' : {
+    'BF' : {
+      '7C0072' : '', # Convertible top down is pressed ['9C', '05', 'BF', ['7C', '00', '72'], '28']
+      '7C0071' : '' # Convertible top up is pressed ['9C', '05', 'BF', ['7C', '00', '71'], '2B']
     }
   }
 }
@@ -136,7 +148,6 @@ def listen():
     time.sleep(TICK) # sleep a bit
 
 def shutDown():
-  logging.debug("Shutting down pyBus...")
   logging.debug("Killing tick utility")
   pB_ticker.shutDown()
 
@@ -158,10 +169,7 @@ class TriggerInit(Exception):
 def d_keyOut(packet):
   global SESSION_DATA
   '''
-  WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Put up window 1
-  WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
-  WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
-  WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
+  _rollWindowsUp()
   '''
   SESSION_DATA["POWER_STATE"] = False
 
@@ -228,6 +236,12 @@ def d_cdPrev(packet):
     _displayTrackInfo()
  '''   
 
+def d_steeringNext(packet):
+  _rollWindowsUp() # for testing
+
+def d_steeringPrev(packet):
+  pass
+
 # Unsure..  
 def d_cdSendStatus(packet):
   writeCurrentTrack()
@@ -248,10 +262,7 @@ def speedTrigger(speed):
   pass
   '''
   if (speed > 100):
-    WRITER.writeBusPacket('3F','00', ['0C', '52', '01'])
-    WRITER.writeBusPacket('3F','00', ['0C', '41', '01'])
-    WRITER.writeBusPacket('3F','00', ['0C', '54', '01'])
-    WRITER.writeBusPacket('3F','00', ['0C', '44', '01'])
+
     '''
 
 # Send state to sister Pi for long-term logging if turned on.
@@ -284,5 +295,12 @@ def _displayTrackInfo(text=True):
   infoQue = _getTrackInfoQue()
   pB_display.setQue(textQue + infoQue)
   '''
+
+# Roll all 4 windows up
+def _rollWindowsUp():
+  WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Put up window 1
+  WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
+  WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
+  WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
 
 #################################################################

@@ -9,6 +9,7 @@ PORT              = 4890 # Port number used for bluetooth RFCOMM
 CONNECTION_LIST   = dict() # Init empty dict for monitoring and checking connections {MAC:socket?}
 CLIENT            = False # Default to server
 SERVER_SOCK       = None # will be filled with socket object if above is true
+PHONE             = "4C:32:75:AD:98:24"
 
 #####################################
 
