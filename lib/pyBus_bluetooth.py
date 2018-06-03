@@ -1,6 +1,6 @@
 # Skeleton taken from https://gist.github.com/keithweaver/3d5dbf38074cee4250c7d9807510c7c3
 
-import bluetooth, logging
+import bluetooth, logging, subprocess
 
 #####################################
 # GLOBALS
@@ -39,6 +39,7 @@ def receiveMessages():
 # Send a message to a MAC address
 def sendMessage(targetBluetoothMacAddress, message):
     global CONNECTION_LIST
+    return # for now
     
     # Add to our master list if new MAC address
     if(targetBluetoothMacAddress not in CONNECTION_LIST.keys()):
@@ -53,6 +54,7 @@ def sendMessage(targetBluetoothMacAddress, message):
 # Search nearby devices
 def findNearbyDevices():
     global CONNECTION_LIST
+    '''
     nearby_devices = bluetooth.discover_devices()
     for bdaddr in nearby_devices:
         logging.debug(str(bluetooth.lookup_name( bdaddr )) + " [" + str(bdaddr) + "]")
@@ -62,10 +64,44 @@ def findNearbyDevices():
         if bdaddr not in nearby_devices:
             CONNECTION_LIST[bdaddr].close()
             CONNECTION_LIST[bdaddr] = False
+    '''
 
 # Quick check for a specific MAC address
+def isNearby(macAddr):
+    return (macAddr in CONNECTION_LIST and CONNECTION_LIST[macAddr] is not False)
+
+# Check for connected BT device to Lucio
 def isConnected(macAddr):
-    return (CONNECTION_LIST[macAddr] is not False)
+    return False
+
+####
+# TODO: All BT media controls should check return of dbus for failures
+####
+
+# Will attempt to skip current Track
+def getMediaInfo(macAddr = PHONE):
+    out, error = _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.freedesktop.DBus.Properties.Get string:org.bluez.MediaPlayer1 string:Track".format(macAddr.replace(':', '_')))
+    return out
+
+def getDeviceInfo(macAddr = PHONE):
+    out, error = _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.freedesktop.DBus.Properties.Get string:org.bluez.MediaPlayer1 string:Status".format(macAddr.replace(':', '_')))
+    return out
+
+# Will attempt to skip current Track
+def nextTrack(macAddr = PHONE):
+    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Next".format(macAddr.replace(':', '_')))
+
+# Will attempt to skip Track backwards
+def prevTrack(macAddr = PHONE):
+    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Previous".format(macAddr.replace(':', '_')))
+
+# Will attempt to pause playing media
+def pause(macAddr = PHONE):
+    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Pause".format(macAddr.replace(':', '_')))
+
+# Will attempt to play media
+def play(macAddr = PHONE):
+    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Play".format(macAddr.replace(':', '_')))
 
 # Shuts down the bluetooth sockets if necessary
 def shutdownBT():
@@ -76,7 +112,23 @@ def shutdownBT():
         for sock in CONNECTION_LIST.values():
             if sock:
                 sock.close()
-    
+
+# Quick utility function to run a subprocess and return 
+def _runSubprocess(command):
+    try:
+        process = subprocess.Popen([command], stdout=subprocess.PIPE)
+        out, err = process.communicate()
+        return [_parseDBusReply(out), _parseDBusReply(err)]
+    except Exception, e:
+        logging.error("Failed to run command: {}".format(command))
+        logging.error(e)
+        return False
+
+# Parse the formatting of the dbus return value into JSON
+def _parseDBusReply(message):
+    print("Dbus message: {}".format(message))
+    return message    
+
 if __name__ == "__main__":
     findNearbyDevices()
     shutdownBT()

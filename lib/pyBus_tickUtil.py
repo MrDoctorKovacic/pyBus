@@ -101,14 +101,6 @@ def revive(funcName):
 #####################################
 # Tick Functions
 #####################################
-def scanForward(arguments):
-  #pB_audio.seek(10)
-  pass
-  
-def scanBackward(arguments):
-  #pB_audio.seek(-10)  
-  pass
-
 def pollResponse(arguments):
   #WRITER.writeBusPacket('18', 'FF', ['02','00'])
   pass
@@ -121,4 +113,5 @@ def sendBluetooth(arguments):
   pB_bt.sendMessage(arguments[0], arguments[1])
 
 def scanBluetooth(arguments):
-  pB_bt.findNearbyDevices()
+  #pB_bt.findNearbyDevices()
+  pass

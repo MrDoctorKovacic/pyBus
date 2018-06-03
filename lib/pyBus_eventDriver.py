@@ -10,6 +10,7 @@ import logging
 import traceback
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
+import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
@@ -27,7 +28,8 @@ import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 DIRECTIVES = {
   '44' : {
     'BF' : {
-      '7401FF' : 'd_keyOut'
+      '7401FF' : 'd_keyOut',
+      '7400FF' : 'd_keyIn'
     }
   },
   '50' : {
@@ -41,7 +43,8 @@ DIRECTIVES = {
     },
     'C8' : {
       '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
-      '3B40' : 'd_RESET'
+      '3B40' : 'd_RESET',
+      '3BA0' : 'd_steeringSpeak'
     }
   },
   '80' : {
@@ -49,10 +52,11 @@ DIRECTIVES = {
       'ALL' : 'd_custom_IKE' # Use ALL to send all data to a particular function
     }
   },
+  #C0 06 68 31 00 00 0B 94 for mode button?
   '68' : {
     '18' : {
       '01'     : 'd_cdPollResponse',
-      '380000' : 'd_cdSendStatus',
+      '380000' : '', # d_cdSendStatus
       '380100' : '',
       '380300' : '',
       '380A00' : 'd_cdNext',
@@ -103,7 +107,7 @@ def init(writer):
 
   #pB_display.immediateText('PyBus Up')
   WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01']) # Turn on the 'clown nose' for 3 seconds
-  
+  #3F 05 00 0C 4E 01 CK should be?
 
 # Manage the packet, meaning traverse the JSON 'DIRECTIVES' object and attempt to determine a suitable function to pass the packet to.
 def manage(packet):
@@ -140,11 +144,18 @@ def manage(packet):
   return result
   
 def listen():
+  global SESSION_DATA
+
   logging.info('Event listener initialized')
   while True:
+    # Grab packet and manage appropriately
     packet = WRITER.readBusPacket()
     if packet:
       manage(packet)
+
+    if SESSION_DATA["POWER_STATE"]: # if we are powered (and can assume router is online) push session data to socket
+      SESSION_DATA["SESSION"] = True
+
     time.sleep(TICK) # sleep a bit
 
 def shutDown():
@@ -168,44 +179,17 @@ class TriggerInit(Exception):
 ############################################################################
 def d_keyOut(packet):
   global SESSION_DATA
-  '''
-  _rollWindowsUp()
-  '''
   SESSION_DATA["POWER_STATE"] = False
 
-def d_togglePause(packet):
-  pass
-  '''
-  global AIRPLAY
-  logging.info("Play/Pause")
-  status = pB_audio.getInfo()
-  if (status['status']['state'] != "play"):
-    AIRPLAY = False
-    pB_display.immediateText('Play')
-    pB_audio.play()
-  else:
-    AIRPLAY = True
-    pB_display.immediateText('Paused')
-    pB_audio.pause()
-  '''
+def d_keyIn(packet):
+  global SESSION_DATA
+  SESSION_DATA["POWER_STATE"] = False
   
 def d_update(packet):
   pass
-  '''
-  # TODO Implement a status updater using the tickUtil
-  logging.info("UPDATE")
-  pB_display.immediateText('UPDATING')
-  pB_audio.update()
-  pB_audio.addAll()
-  '''
   
 def d_RESET(packet):
   pass
-  '''
-  logging.info("RESET")
-  pB_display.immediateText('RESET')
-  raise TriggerRestart("Restart Triggered")
-  '''
 
 # This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
 def d_custom_IKE(packet):
@@ -217,35 +201,24 @@ def d_custom_IKE(packet):
     sendState({'speed' : speed, 'revs' : revs}) 
     speedTrigger(speed) # This is a silly little thing for changing track based on speed)
 
+def d_togglePause(packet):
+  pB_bt.pause()
+
 # NEXT command is invoked from the Radio. 
 def d_cdNext(packet):
-  pass
-  '''
-  if not AIRPLAY:
-    pB_audio.next()
-    writeCurrentTrack()
-    _displayTrackInfo()
-  '''
+  pB_bt.nextTrack()
 
 def d_cdPrev(packet):
-  pass
-  '''
-  if not AIRPLAY:
-    pB_audio.previous()
-    writeCurrentTrack()
-    _displayTrackInfo()
- '''   
+  pB_bt.prevTrack()  
 
 def d_steeringNext(packet):
-  _rollWindowsUp() # for testing
+  pB_bt.nextTrack()
 
 def d_steeringPrev(packet):
-  pass
+  pB_bt.prevTrack()
 
-# Unsure..  
-def d_cdSendStatus(packet):
-  writeCurrentTrack()
-  _displayTrackInfo
+def d_steeringSpeak(packet):
+  pB_bt.pause()
 
 # Respond to the Poll for changer alive
 def d_cdPollResponse(packet):
@@ -260,10 +233,6 @@ def d_testSpeed(packet):
 def speedTrigger(speed):
   global SESSION_DATA
   pass
-  '''
-  if (speed > 100):
-
-    '''
 
 # Send state to sister Pi for long-term logging if turned on.
 # TODO: Implement once bluetooth library is tested
@@ -302,5 +271,34 @@ def _rollWindowsUp():
   WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
   WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
   WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
+
+# Roll all 4 windows down
+def _rollWindowsDown():
+  WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Put down window 1
+  WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Put down window 2
+  WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Put down window 3
+  WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
+
+# Put Convertible Top Down
+def _convertibleTopDown():
+  WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
+
+# Put Convertible Top Up
+def _convertibleTopUp():
+  WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+
+# Tell IKE to set the time
+def _setTime(day, month, year, hour, minute):
+  # Check inputs to make sure we don't break things:
+  for c in [day, month, year, hour, minute]:
+    if not isinstance(c, int) or c > 255 or c < 0:
+      return False
+
+  # Write Hours : Minutes
+  WRITER.writeBusPacket('3B', '80', ['40', '01', ('{:02x}'.format(hour)).upper(), ('{:02x}'.format(minute)).upper()])
+  # Write Day/Month/Year
+  WRITER.writeBusPacket('3B', '80', ['40', '02', ('{:02x}'.format(day)).upper(), ('{:02x}'.format(month)).upper(), ('{:02x}'.format(year)).upper()])
+
+  return True
 
 #################################################################

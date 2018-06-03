@@ -15,7 +15,7 @@ sys.path.append( './lib/' )
 # Here we import the two types of drivers. The event driven driver, and the ticking driver.
 import pyBus_eventDriver as pB_eDriver # For responding to signals
 
-from pyBus_interface import *
+from pyBus_interface import ibusFace
 #####################################
 # GLOBALS
 #####################################
