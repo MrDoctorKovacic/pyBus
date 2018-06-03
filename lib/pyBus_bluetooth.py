@@ -116,7 +116,7 @@ def shutdownBT():
 # Quick utility function to run a subprocess and return 
 def _runSubprocess(command):
     try:
-        process = subprocess.Popen([command], shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
         out, err = process.communicate()
         return [_parseDBusReply(out), _parseDBusReply(err)]
     except Exception, e:
