@@ -89,7 +89,7 @@ def getDeviceInfo(macAddr = PHONE):
 
 # Will attempt to skip current Track
 def nextTrack(macAddr = PHONE):
-    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_4C_32_75_AD_98_24/player0 org.bluez.MediaPlayer1.Next")
+    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_4C_32_75_AD_98_24/player0", "org.bluez.MediaPlayer1.Next"])
 
 # Will attempt to skip Track backwards
 def prevTrack(macAddr = PHONE):
@@ -116,7 +116,7 @@ def shutdownBT():
 # Quick utility function to run a subprocess and return 
 def _runSubprocess(command):
     try:
-        process = subprocess.Popen([command], stdout=subprocess.PIPE)
+        process = subprocess.Popen([command], shell=True, stdout=subprocess.PIPE)
         out, err = process.communicate()
         return [_parseDBusReply(out), _parseDBusReply(err)]
     except Exception, e:
@@ -131,4 +131,5 @@ def _parseDBusReply(message):
 
 if __name__ == "__main__":
     findNearbyDevices()
+    nextTrack()
     shutdownBT()
