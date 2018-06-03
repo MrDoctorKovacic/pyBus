@@ -37,9 +37,9 @@ DIRECTIVES = {
       '3210' : 'd_volumeDown',
       '3211' : 'd_volumeUp',
       '3B01' : 'd_steeringNext',
-      '3B21' : 'd_steeringNext',
+      #'3B21' : 'd_steeringNext',
       '3B08' : 'd_steeringPrev',
-      '3B28' : 'd_steeringPrev'
+      #'3B28' : 'd_steeringPrev'
     },
     'C8' : {
       '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
