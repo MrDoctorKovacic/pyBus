@@ -89,11 +89,11 @@ def getDeviceInfo(macAddr = PHONE):
 
 # Will attempt to skip current Track
 def nextTrack(macAddr = PHONE):
-    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_4C_32_75_AD_98_24/player0", "org.bluez.MediaPlayer1.Next"])
+    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Next"])
 
 # Will attempt to skip Track backwards
 def prevTrack(macAddr = PHONE):
-    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Previous".format(macAddr.replace(':', '_')))
+    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Previous"])
 
 # Will attempt to pause playing media
 def pause(macAddr = PHONE):
