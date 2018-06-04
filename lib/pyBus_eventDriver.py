@@ -8,6 +8,7 @@ import signal
 import random
 import logging
 import traceback
+import datetime
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_bluetooth as pB_bt # For bluetooth audio controls
@@ -85,6 +86,7 @@ DIRECTIVES = {
 
 WRITER = None
 SESSION_DATA = {}
+SESSION_FILE = None
 TICK = 0.02 # sleep interval in seconds used between iBUS reads
 AIRPLAY = False
 TARGET_SIS_MAC    = "" # Target MAC address for a sister pi to recieve some data
@@ -94,20 +96,27 @@ TARGET_SIS_MAC    = "" # Target MAC address for a sister pi to recieve some data
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer):
-  global WRITER, SESSION_DATA
+  global WRITER, SESSION_DATA, SESSION_FILE
   WRITER = writer
 
   pB_ticker.init(WRITER)
   
   # Init scanning for bluetooth every so often
-  pB_ticker.enableFunc("scanBluetooth", 20)
+  #pB_ticker.enableFunc("scanBluetooth", 20)
 
+  # Init session data (will be written to network)
   SESSION_DATA["DOOR_LOCKED"] = False
   SESSION_DATA["POWER_STATE"] = False # TODO: to be toggled on key-in/key-out (distinguish between AUX/full power for power saving considerations)
+  SESSION_DATA["SPEED"] = 0
+  SESSION_DATA["RPM"] = 0
 
   #pB_display.immediateText('PyBus Up')
   WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01']) # Turn on the 'clown nose' for 3 seconds
   #3F 05 00 0C 4E 01 CK should be?
+
+  # Set date/time. Redundant, but helps easily diagnose what time the Pi THINKS it is
+  now = datetime.datetime.now()
+  _setTime(now.day, now.month, now.year, now.hour, now.minute)
 
 # Manage the packet, meaning traverse the JSON 'DIRECTIVES' object and attempt to determine a suitable function to pass the packet to.
 def manage(packet):
@@ -144,7 +153,7 @@ def manage(packet):
   return result
   
 def listen():
-  global SESSION_DATA
+  global SESSION_DATA, SESSION_FILE
 
   logging.info('Event listener initialized')
   while True:
@@ -156,16 +165,16 @@ def listen():
     if SESSION_DATA["POWER_STATE"]: # if we are powered (and can assume router is online) push session data to socket
       SESSION_DATA["SESSION"] = True
 
+      # Open file for writing session data
+      SESSION_FILE = open("/var/www/html/session.json","w")
+      SESSION_FILE.write(json.dumps(SESSION_DATA))
+      SESSION_FILE.close()
+
     time.sleep(TICK) # sleep a bit
 
 def shutDown():
   logging.debug("Killing tick utility")
   pB_ticker.shutDown()
-
-class TriggerRestart(Exception):
-  pass
-class TriggerInit(Exception):
-  pass
 
 ############################################################################
 # FROM HERE ON ARE THE DIRECTIVES
@@ -191,15 +200,43 @@ def d_update(packet):
 def d_RESET(packet):
   pass
 
-# This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
+# This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. 
+# But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
 def d_custom_IKE(packet):
+  global SESSION_DATA
   packet_data = packet['dat']
+
+  # IKE Speed / RPM Info
   if packet_data[0] == '18':
     speed = int(packet_data[1], 16) * 2
     revs = int(packet_data[2], 16)
 
-    sendState({'speed' : speed, 'revs' : revs}) 
+    SESSION_DATA["SPEED"] = speed
+    SESSION_DATA["REVS"] = revs
     speedTrigger(speed) # This is a silly little thing for changing track based on speed)
+  
+  # IKE Ignition Status
+  elif packet_data[0] == '11':
+    if (packet_data[1] == '00'): # Key Out. Should call d_keyOut or no?
+      SESSION_DATA["POWER_STATE"] = False
+    elif (packet_data[1] == '01'): # Pos 1
+      SESSION_DATA["POWER_STATE"] = "POS_1"
+    elif (packet_data[1] == '03'): # Pos 2
+      SESSION_DATA["POWER_STATE"] = "POS_2"
+    elif (packet_data[1] == '07'): # Start
+      SESSION_DATA["POWER_STATE"] = "START"
+  
+  # IKE Temperature Status
+  elif packet_data[0] == '19':
+    SESSION_DATA["OUTSIDE_TEMP"] = packet_data[1]
+    SESSION_DATA["COOLANT_TEMP"] = packet_data[2]
+
+  # IKE OBC Estimated Range / Average Speed
+  elif packet_data[0] == '24':
+    if (packet_data[1] == '06'):
+      SESSION_DATA["RANGE_KM"] = packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]
+    elif (packet_data[1] == '0A'):
+      SESSION_DATA["AVG_SPEED"] = packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]
 
 def d_togglePause(packet):
   pB_bt.pause()
@@ -212,19 +249,19 @@ def d_cdPrev(packet):
   pB_bt.prevTrack()  
 
 def d_steeringNext(packet):
-  pB_bt.nextTrack()
+  #pB_bt.nextTrack()
+  _convertibleTopUp() # For testing
 
 def d_steeringPrev(packet):
-  pB_bt.prevTrack()
+  #pB_bt.prevTrack()
+  _convertibleTopDown() # For testing
 
 def d_steeringSpeak(packet):
   pB_bt.pause()
 
 # Respond to the Poll for changer alive
 def d_cdPollResponse(packet):
-  pB_ticker.disableFunc("announce") # stop announcing
-  pB_ticker.disableFunc("pollResponse")
-  pB_ticker.enableFunc("pollResponse", 30)
+  pass
 
 def d_testSpeed(packet):
   speedTrigger(110)
@@ -234,36 +271,7 @@ def speedTrigger(speed):
   global SESSION_DATA
   pass
 
-# Send state to sister Pi for long-term logging if turned on.
-# TODO: Implement once bluetooth library is tested
-def sendState(state):
-  global TARGET_SIS_MAC
-  logging.debug("Sending to sister pi state: [%s]", state)
-
-  '''
-  if(SESSION_DATA["POWER_STATE"]):
-    pB_ticker.enableFunc("sendMessage", 1, 0, [TARGET_SIS_MAC, state]) # send non-blocking bluetooth message
-  '''
-      
 ################## DIRECTIVE UTILITY FUNCTIONS ##################
-# Write current track to display 
-def writeCurrentTrack():
-  pass
-  '''
-  WRITER.writeBusPacket('18', '68', ['39', '02', '09', '00', '3F', '00', "Test", "Text"])
-  '''
-
-# Sets the text stack to something..
-def _displayTrackInfo(text=True):
-  pass
-  '''
-  infoQue = []
-  textQue = []
-  if text:
-    textQue = _getTrackTextQue()
-  infoQue = _getTrackInfoQue()
-  pB_display.setQue(textQue + infoQue)
-  '''
 
 # Roll all 4 windows up
 def _rollWindowsUp():

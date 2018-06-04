@@ -39,7 +39,6 @@ def receiveMessages():
 # Send a message to a MAC address
 def sendMessage(targetBluetoothMacAddress, message):
     global CONNECTION_LIST
-    return # for now
     
     # Add to our master list if new MAC address
     if(targetBluetoothMacAddress not in CONNECTION_LIST.keys()):
@@ -54,7 +53,7 @@ def sendMessage(targetBluetoothMacAddress, message):
 # Search nearby devices
 def findNearbyDevices():
     global CONNECTION_LIST
-    '''
+
     nearby_devices = bluetooth.discover_devices()
     for bdaddr in nearby_devices:
         logging.debug(str(bluetooth.lookup_name( bdaddr )) + " [" + str(bdaddr) + "]")
@@ -64,7 +63,6 @@ def findNearbyDevices():
         if bdaddr not in nearby_devices:
             CONNECTION_LIST[bdaddr].close()
             CONNECTION_LIST[bdaddr] = False
-    '''
 
 # Quick check for a specific MAC address
 def isNearby(macAddr):
@@ -80,11 +78,11 @@ def isConnected(macAddr):
 
 # Will attempt to skip current Track
 def getMediaInfo(macAddr = PHONE):
-    out, error = _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.freedesktop.DBus.Properties.Get string:org.bluez.MediaPlayer1 string:Track".format(macAddr.replace(':', '_')))
+    out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.freedesktop.DBus.Properties.Get", "string:org.bluez.MediaPlayer1", "string:Track"])
     return out
 
 def getDeviceInfo(macAddr = PHONE):
-    out, error = _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.freedesktop.DBus.Properties.Get string:org.bluez.MediaPlayer1 string:Status".format(macAddr.replace(':', '_')))
+    out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.freedesktop.DBus.Properties.Get", "string:org.bluez.MediaPlayer1", "string:Status"])
     return out
 
 # Will attempt to skip current Track
@@ -97,11 +95,11 @@ def prevTrack(macAddr = PHONE):
 
 # Will attempt to pause playing media
 def pause(macAddr = PHONE):
-    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Pause".format(macAddr.replace(':', '_')))
+    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Pause"])
 
 # Will attempt to play media
 def play(macAddr = PHONE):
-    _runSubprocess("dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Play".format(macAddr.replace(':', '_')))
+    _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Play"])
 
 # Shuts down the bluetooth sockets if necessary
 def shutdownBT():
@@ -126,8 +124,14 @@ def _runSubprocess(command):
 
 # Parse the formatting of the dbus return value into JSON
 def _parseDBusReply(message):
-    print("Dbus message: {}".format(message))
-    return message    
+    jsonDict = dict()
+    for p in message.split():
+        for q in p.split('=:'):
+            if len(q):
+                jsonDict[q[0]] = q[1]
+
+    logging.debug("DBUS message: {}".format(jsonDict))
+    return jsonDict    
 
 if __name__ == "__main__":
     findNearbyDevices()
