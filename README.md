@@ -13,6 +13,7 @@ This is to be used with the USB interface which can be acquired from [Reslers.de
 ### Useful links
 http://web.archive.org/web/20041204074622/www.openbmw.org/bus/  
 http://web.comhem.se/bengt-olof.swing/ibusdevicesandoperations.htm   
+http://www.online-rubin.de/BMW/I-Bus/I-BUS%20Codes%20e46.htm 
 
 ### Warning
 All software is in early alpha stages! K/I-Bus issues can be painful to diagnose and fix, so please don't use this to mess up your car.

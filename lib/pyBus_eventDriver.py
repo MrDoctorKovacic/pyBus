@@ -28,6 +28,11 @@ import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 # second level is destination
 # third level is data : function name
 DIRECTIVES = {
+  '3F' : {
+    '00' : {
+      '0C3401' : '' # All doors unlocked
+    }
+  },
   '44' : {
     'BF' : {
       '7401FF' : 'd_keyOut',
@@ -39,9 +44,9 @@ DIRECTIVES = {
       '3210' : 'd_volumeDown',
       '3211' : 'd_volumeUp',
       '3B01' : 'd_steeringNext',
-      #'3B21' : 'd_steeringNext',
+      '3B21' : '', # Steering next held down, I believe
       '3B08' : 'd_steeringPrev',
-      #'3B28' : 'd_steeringPrev'
+      '3B28' : '' # Steering prev held down, I believe
     },
     'C8' : {
       '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
@@ -75,12 +80,6 @@ DIRECTIVES = {
       '380401' : '', # next Playlist function?
       '380800' : '',
       '380801' : ''
-    }
-  },
-  '9C' : {
-    'BF' : {
-      '7C0072' : '', # Convertible top down is pressed ['9C', '05', 'BF', ['7C', '00', '72'], '28']
-      '7C0071' : '' # Convertible top up is pressed ['9C', '05', 'BF', ['7C', '00', '71'], '2B']
     }
   }
 }
@@ -331,6 +330,15 @@ def speedTrigger(speed):
 
 ################## DIRECTIVE UTILITY FUNCTIONS ##################
 
+def _toggleDoorLocks():
+  WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
+
+def _lockDoors():
+  WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
+
+def _openTrunk():
+  WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
+
 # Roll all 4 windows up
 def _rollWindowsUp():
   WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Put up window 1
@@ -347,13 +355,13 @@ def _rollWindowsDown():
 
 # Put Convertible Top Down
 def _convertibleTopDown():
-  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72']) wrong
-  pass
+  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
+  WRITER.writeBusPacket('3F', '00', ['0C', '7F', '01'])
 
 # Put Convertible Top Up
 def _convertibleTopUp():
-  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71']) wrong
-  pass
+  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+  WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
 
 # Tell IKE to set the time
 def _setTime(day, month, year, hour, minute):
