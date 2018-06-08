@@ -11,6 +11,9 @@ import gzip
 import pyBus_core as core
 import zmq
 
+SESSION_CONTEXT = None
+SESSION_SOCKET = None
+
 #####################################
 # FUNCTIONS
 #####################################
@@ -59,6 +62,13 @@ devPath = sys.argv[1] if (len(sys.argv) > 1) else "/dev/ttyUSB0"
 core.DEVPATH = devPath if devPath else "/dev/ttyUSB0"
 
 try:
+
+    # Start context for inter-protocol communication
+  SESSION_CONTEXT = zmq.Context()
+  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.PUB)
+  SESSION_SOCKET.bind("tcp://localhost:4884") 
+  logging.info("Started ZMQ Socket at 4884")
+
   core.initialize()
   core.run()
 except Exception:
