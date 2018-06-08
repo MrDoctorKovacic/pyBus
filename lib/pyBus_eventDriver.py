@@ -56,8 +56,7 @@ DIRECTIVES = {
       '3B40' : 'd_RESET',
       '3B80' : '', # Dial button
       '3B90' : '', # Dial button, long press
-      '3B90' : '', # Dial button, released
-      '3BA0' : 'd_steeringSpeak'
+      '3BA0' : 'd_steeringSpeak' # Dial button, released
     }
   },
   '80' : {
@@ -340,6 +339,9 @@ def _toggleDoorLocks():
 
 def _lockDoors():
   WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
+
+def _unlockDoors():
+  WRITER.writeBusPacket('00','BF', ['7A', '10', '20'])
 
 def _openTrunk():
   WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
