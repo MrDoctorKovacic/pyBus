@@ -9,6 +9,7 @@ import random
 import logging
 import traceback
 import datetime
+import zmq
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_bluetooth as pB_bt # For bluetooth audio controls
@@ -84,25 +85,41 @@ DIRECTIVES = {
   }
 }
 
-WRITER = None
-SESSION_DATA = {}
-SESSION_FILE = None
+
+#####################################
+# CONFIG
+#####################################
 TICK = 0.02 # sleep interval in seconds used between iBUS reads
 AIRPLAY = False
-TARGET_SIS_MAC    = "" # Target MAC address for a sister pi to recieve some data
+LISTEN_SOCKET = 4884 # port that we listen on for external messages (from other networked pis)
+
+#####################################
+# Define Globals
+#####################################
+WRITER = None
+SESSION_DATA = {}
+SESSION_CONTEXT = None
+SESSION_SOCKET = None
 
 #####################################
 # FUNCTIONS
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer):
-  global WRITER, SESSION_DATA, SESSION_FILE
-  WRITER = writer
+  global WRITER, SESSION_DATA, SESSION_CONTEXT, SESSION_SOCKET
 
+  # Start ibus writer
+  WRITER = writer
   pB_ticker.init(WRITER)
   
   # Init scanning for bluetooth every so often
   #pB_ticker.enableFunc("scanBluetooth", 20)
+
+  # Start context for inter-protocol communication
+  SESSION_CONTEXT = zmq.Context()
+  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.PUB)
+  SESSION_SOCKET.bind("tcp://localhost:{}".format(LISTEN_SOCKET)) 
+  logging.info("Started ZMQ Socket at {}".format(LISTEN_SOCKET))
 
   # Init session data (will be written to network)
   SESSION_DATA["DOOR_LOCKED"] = False
@@ -153,7 +170,7 @@ def manage(packet):
   return result
   
 def listen():
-  global SESSION_DATA, SESSION_FILE
+  global SESSION_DATA
 
   logging.info('Event listener initialized')
   while True:
@@ -162,15 +179,55 @@ def listen():
     if packet:
       manage(packet)
 
+    # Check external messages
+    message = checkExternalMessages()
+    if message:
+      manageExternalMessages(message)
+
+    # Write to session state to file
     if SESSION_DATA["POWER_STATE"]: # if we are powered (and can assume router is online) push session data to socket
       SESSION_DATA["SESSION"] = True
 
       # Open file for writing session data
-      SESSION_FILE = open("/var/www/html/session.json","w")
-      SESSION_FILE.write(json.dumps(SESSION_DATA))
-      SESSION_FILE.close()
+      session_file = open("/var/www/html/session.json","w")
+      session_file.write(json.dumps(SESSION_DATA))
+      session_file.close()
 
     time.sleep(TICK) # sleep a bit
+
+# Handles various external messages, usually by calling an ibus directive
+def manageExternalMessages(message):
+  message_array = json.loads(message)
+
+  # Directive / Bluetooth command verbatim
+  if "directive" in message_array[0]:
+    try:
+      methodToCall = globals().get(message_array["directive"], None)
+      data = methodToCall()
+
+      # Either send (requested) data or an acknowledgement back to node
+      if data is not None:
+        response = json.dumps(data)
+      else:
+        response = "OK" # 10-4
+      SESSION_SOCKET.send(response) 
+
+    except Exception, e:
+      logging.error("Failed to call directive from external command.\n{}".format(e))
+
+# Checks for any external messages sent to socket,
+def checkExternalMessages():
+  global SESSION_SOCKET
+
+  # Non-blocking, as to not interrupt parsing ibus messages
+  try:
+    message = SESSION_SOCKET.recv(flags=zmq.NOBLOCK)
+    logging.debug("Got External Message: {}".format(message))
+    return message
+
+  # IF no messages are queued
+  except zmq.Again:
+    return None
 
 def shutDown():
   logging.debug("Killing tick utility")
@@ -225,7 +282,7 @@ def d_custom_IKE(packet):
       SESSION_DATA["POWER_STATE"] = "POS_2"
     elif (packet_data[1] == '07'): # Start
       SESSION_DATA["POWER_STATE"] = "START"
-  
+
   # IKE Temperature Status
   elif packet_data[0] == '19':
     SESSION_DATA["OUTSIDE_TEMP"] = packet_data[1]
