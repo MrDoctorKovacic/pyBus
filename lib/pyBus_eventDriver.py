@@ -98,6 +98,8 @@ LISTEN_SOCKET = 4884 # port that we listen on for external messages (from other 
 #####################################
 WRITER = None
 SESSION_DATA = {}
+SESSION_CONTEXT = None
+SESSION_SOCKET = None
 
 #####################################
 # FUNCTIONS
@@ -112,6 +114,12 @@ def init(writer):
   
   # Init scanning for bluetooth every so often
   #pB_ticker.enableFunc("scanBluetooth", 20)
+
+  # Start context for inter-protocol communication
+  SESSION_CONTEXT = zmq.Context()
+  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.PUB)
+  SESSION_SOCKET.bind("tcp://127.0.0.1:4884") 
+  logging.info("Started ZMQ Socket at 4884")
 
   # Init session data (will be written to network)
   SESSION_DATA["DOOR_LOCKED"] = False
@@ -172,10 +180,9 @@ def listen():
       manage(packet)
 
     # Check external messages
-    '''message = checkExternalMessages()
+    message = checkExternalMessages()
     if message:
       manageExternalMessages(message)
-  '''
 
     # Write to session state to file
     if SESSION_DATA["POWER_STATE"]: # if we are powered (and can assume router is online) push session data to socket
@@ -189,7 +196,6 @@ def listen():
     time.sleep(TICK) # sleep a bit
 
 # Handles various external messages, usually by calling an ibus directive
-'''
 def manageExternalMessages(message):
   message_array = json.loads(message)
 
@@ -222,7 +228,6 @@ def checkExternalMessages():
   # IF no messages are queued
   except zmq.Again:
     return None
-'''
 
 def shutDown():
   logging.debug("Killing tick utility")
