@@ -9,6 +9,7 @@ import logging
 import argparse
 import gzip
 import pyBus_core as core
+import zmq
 
 #####################################
 # FUNCTIONS
