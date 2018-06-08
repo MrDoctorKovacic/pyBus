@@ -117,9 +117,9 @@ def init(writer):
 
   # Start context for inter-protocol communication
   SESSION_CONTEXT = zmq.Context()
-  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.PUB)
-  SESSION_SOCKET.bind("tcp://127.0.0.1:4884") 
-  logging.info("Started ZMQ Socket at 4884")
+  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.REP)
+  SESSION_SOCKET.bind("tcp://127.0.0.1:{}".format(LISTEN_SOCKET)) 
+  logging.info("Started ZMQ Socket at {}".format(LISTEN_SOCKET))
 
   # Init session data (will be written to network)
   SESSION_DATA["DOOR_LOCKED"] = False
@@ -221,7 +221,7 @@ def checkExternalMessages():
 
   # Non-blocking, as to not interrupt parsing ibus messages
   try:
-    message = SESSION_SOCKET.recv(flags=zmq.NOBLOCK)
+    message = SESSION_SOCKET.recv(zmq.NOBLOCK)
     logging.debug("Got External Message: {}".format(message))
     return message
 
@@ -346,11 +346,13 @@ def _rollWindowsDown():
 
 # Put Convertible Top Down
 def _convertibleTopDown():
-  WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
+  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72']) wrong
+  pass
 
 # Put Convertible Top Up
 def _convertibleTopUp():
-  WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71']) wrong
+  pass
 
 # Tell IKE to set the time
 def _setTime(day, month, year, hour, minute):
