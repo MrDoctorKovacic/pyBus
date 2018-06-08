@@ -112,7 +112,8 @@ class ibusFace ( ):
     packet['dat'] = dataTmp
     packet['xor'] = self.readChar()
     valStr = [packet['src'], packet['len'], packet['dst'], packet['dat'], packet['xor']]
-    logging.debug("READ: %s" % valStr)
+    if packet['src'] != '80': # remove IKE packet logging spam while I figure out the rest
+      logging.debug("READ: %s" % valStr)
     return packet
 
   # Read in one character from the bus and convert to hex

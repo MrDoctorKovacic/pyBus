@@ -39,18 +39,24 @@ DIRECTIVES = {
       '7400FF' : 'd_keyIn'
     }
   },
-  '50' : {
-    '68' : {
+  '50' : { # MF Steering Wheel Buttons
+    '68' : { # RADIO
       '3210' : 'd_volumeDown',
       '3211' : 'd_volumeUp',
       '3B01' : 'd_steeringNext',
-      '3B21' : '', # Steering next held down, I believe
+      '3B11' : '', # Next, long press
+      '3B21' : '', # Next Released
       '3B08' : 'd_steeringPrev',
-      '3B28' : '' # Steering prev held down, I believe
+      '3B18' : '', # Prev, long press
+      '3B28' : '' # Prev Released
     },
     'C8' : {
-      '01' : 'd_cdPollResponse', # This can happen via RT button or ignition
+      '01' : '', # This can happen via RT button or ignition
+      '019A' : '', # RT Button
       '3B40' : 'd_RESET',
+      '3B80' : '', # Dial button
+      '3B90' : '', # Dial button, long press
+      '3B90' : '', # Dial button, released
       '3BA0' : 'd_steeringSpeak'
     }
   },
@@ -126,9 +132,8 @@ def init(writer):
   SESSION_DATA["SPEED"] = 0
   SESSION_DATA["RPM"] = 0
 
-  #pB_display.immediateText('PyBus Up')
-  WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01']) # Turn on the 'clown nose' for 3 seconds
-  #3F 05 00 0C 4E 01 CK should be?
+  # Turn on the 'clown nose' for 3 seconds
+  WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
 
   # Set date/time. Redundant, but helps easily diagnose what time the Pi THINKS it is
   now = datetime.datetime.now()
@@ -148,23 +153,23 @@ def manage(packet):
     else:
       methodName = dstDir[dataString]
   except Exception, e:
-    logging.debug("Exception from packet manager [%s]" % e)
+    if src != '80': logging.debug("Exception from packet manager [%s]" % e)
     
   result = None
   if methodName != None:
     methodToCall = globals().get(methodName, None)
     if methodToCall:
-      logging.debug("Directive found for packet - %s" % methodName)
+      if src != '80': logging.debug("Directive found for packet - %s" % methodName)
       try:
         result = methodToCall(packet)
       except:
-        logging.error("Exception raised from [%s]" % methodName)
-        logging.error(traceback.format_exc())
+        if src != '80': logging.error("Exception raised from [%s]" % methodName)
+        if src != '80': logging.error(traceback.format_exc())
     
     else:
-      logging.debug("Method (%s) does not exist" % methodName)
+      if src != '80': logging.debug("Method (%s) does not exist" % methodName)
   else:
-    logging.debug("MethodName (%s) does not match a function" % methodName)
+    if src != '80': logging.debug("MethodName (%s) does not match a function" % methodName)
 
   return result
   
