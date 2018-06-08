@@ -198,9 +198,10 @@ def listen():
 # Handles various external messages, usually by calling an ibus directive
 def manageExternalMessages(message):
   message_array = json.loads(message)
+  logging.debug(message_array)
 
   # Directive / Bluetooth command verbatim
-  if "directive" in message_array[0]:
+  if "directive" in message_array:
     try:
       methodToCall = globals().get(message_array["directive"], None)
       data = methodToCall()
