@@ -23,6 +23,8 @@ from pyBus_interface import ibusFace
 DEVPATH           = "/dev/ttyUSB0" # This is a default, but its always overridden. So not really a default.
 IBUS              = None
 REGISTERED        = False # This is a temporary measure until state driven behaviour is implemented
+SESSION_CONTEXT = None
+SESSION_SOCKET = None
 
 #####################################
 # FUNCTIONS
@@ -31,6 +33,12 @@ REGISTERED        = False # This is a temporary measure until state driven behav
 def initialize():
   global IBUS, REGISTERED, DEVPATH
   REGISTERED=False
+
+  # Start context for inter-protocol communication
+  SESSION_CONTEXT = zmq.Context()
+  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.PUB)
+  SESSION_SOCKET.bind("tcp://localhost:4884") 
+  logging.info("Started ZMQ Socket at 4884")
   
   # Initialize the iBus interface or wait for it to become available.
   while IBUS == None:
