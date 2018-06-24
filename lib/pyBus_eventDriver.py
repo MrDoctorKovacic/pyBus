@@ -254,8 +254,13 @@ def updateSessionData(key, data):
   global SESSION_DATA
   now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
   SESSION_DATA[key] = data
+  
+  # Ensure proper key structures exist
   if "UPDATED_TIME" not in SESSION_DATA:
     SESSION_DATA["UPDATED_TIME"] = []
+  if key not in SESSION_DATA["UPDATED_TIME"]:
+    SESSION_DATA["UPDATED_TIME"][key] = None
+
   SESSION_DATA["UPDATED_TIME"][key] = now
 
   ##
