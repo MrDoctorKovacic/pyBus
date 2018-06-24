@@ -257,7 +257,7 @@ def updateSessionData(key, data):
   
   # Ensure proper key structures exist
   if "UPDATED_TIME" not in SESSION_DATA:
-    SESSION_DATA["UPDATED_TIME"] = []
+    SESSION_DATA["UPDATED_TIME"] = dict()
   if key not in SESSION_DATA["UPDATED_TIME"]:
     SESSION_DATA["UPDATED_TIME"][key] = None
 
