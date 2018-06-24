@@ -21,15 +21,13 @@ from pyBus_interface import ibusFace
 #####################################
 DEVPATH           = "/dev/ttyUSB0" # This is a default, but its always overridden. So not really a default.
 IBUS              = None
-REGISTERED        = False # This is a temporary measure until state driven behaviour is implemented
 
 #####################################
 # FUNCTIONS
 
 # Initializes modules as required and opens files for writing
 def initialize():
-  global IBUS, REGISTERED, DEVPATH
-  REGISTERED=False
+  global IBUS, DEVPATH
   
   # Initialize the iBus interface or wait for it to become available.
   while IBUS == None:

@@ -28,6 +28,12 @@ import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 # second level is destination
 # third level is data : function name
 DIRECTIVES = {
+  '00' : {
+    'BF' : {
+      '7A1000' : None, # passenger door opened, probably
+      '7A5202' : None # passenger door closed, probably
+    }
+  },
   '3F' : {
     '00' : {
       '0C3401' : '' # All doors unlocked
@@ -44,19 +50,19 @@ DIRECTIVES = {
       '3210' : 'd_volumeDown',
       '3211' : 'd_volumeUp',
       '3B01' : 'd_steeringNext',
-      '3B11' : '', # Next, long press
-      '3B21' : '', # Next Released
+      '3B11' : None, # Next, long press
+      '3B21' : None, # Next Released
       '3B08' : 'd_steeringPrev',
-      '3B18' : '', # Prev, long press
-      '3B28' : '' # Prev Released
+      '3B18' : None, # Prev, long press
+      '3B28' : None # Prev Released
     },
     'C8' : {
-      '01' : '', # This can happen via RT button or ignition
-      '019A' : '', # RT Button
-      '3B40' : 'd_RESET',
-      '3B80' : '', # Dial button
-      '3B90' : '', # Dial button, long press
-      '3BA0' : 'd_steeringSpeak' # Dial button, released
+      '01' : None, # This can happen via RT button or ignition
+      '019A' : None, # RT Button
+      '3B40' : None, # reset
+      '3B80' : 'd_steeringSpeak', # Dial button
+      '3B90' : 'd_steeringSpeakLong', # Dial button, long press
+      '3BA0' : None # Dial button, released
     }
   },
   '80' : {
@@ -64,37 +70,37 @@ DIRECTIVES = {
       'ALL' : 'd_custom_IKE' # Use ALL to send all data to a particular function
     }
   },
-  #C0 06 68 31 00 00 0B 94 for mode button?
   '68' : {
     '18' : {
-      '01'     : 'd_cdPollResponse',
-      '380000' : '', # d_cdSendStatus
-      '380100' : '',
-      '380300' : '',
-      '380A00' : 'd_cdNext',
-      '380A01' : 'd_cdPrev',
-      '380700' : '',
-      '380701' : '',
-      '380601' : '', # 1 pressed
-      '380602' : 'd_togglePause', # 2 pressed
-      '380603' : 'd_testSpeed', # 3 pressed
-      '380604' : '', # 4 pressed
-      '380605' : 'd_update', # 5 pressed
-      '380606' : 'd_RESET', # 6 pressed
-      '380400' : '', # prev Playlist function?
-      '380401' : '', # next Playlist function?
-      '380800' : '',
-      '380801' : ''
+      '01'     : '',
+      '380000' : None, # d_cdSendStatus
+      '380100' : None,
+      '380300' : None,
+      '380A00' : 'd_cdNext', # Next button on Radio
+      '380A01' : 'd_cdPrev', # Prev button on Radio
+      '380700' : None,
+      '380701' : None,
+      '380601' : None, # 1 pressed
+      '380602' : None, # 2 pressed
+      '380603' : None, # 3 pressed
+      '380604' : None, # 4 pressed
+      '380605' : None, # 5 pressed
+      '380606' : None, # 6 pressed
+      '380400' : None, # prev Playlist function?
+      '380401' : None, # next Playlist function?
+      '380800' : None,
+      '380801' : None
     }
   }
 }
-
 
 #####################################
 # CONFIG
 #####################################
 TICK = 0.02 # sleep interval in seconds used between iBUS reads
 AIRPLAY = False
+WRITE_SESSION_TO_FILE = "/var/www/html/session.json" # If we should be writing collected data to a file at the webroot. False if we shouldn't be writing
+LISTEN_FOR_EXTERNAL_COMMANDS = True # If we should open a port to listen for commands from network
 LISTEN_SOCKET = 4884 # port that we listen on for external messages (from other networked pis)
 
 #####################################
@@ -110,7 +116,7 @@ SESSION_SOCKET = None
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer):
-  global WRITER, SESSION_DATA, SESSION_CONTEXT, SESSION_SOCKET
+  global WRITER, SESSION_CONTEXT, SESSION_SOCKET
 
   # Start ibus writer
   WRITER = writer
@@ -120,16 +126,18 @@ def init(writer):
   #pB_ticker.enableFunc("scanBluetooth", 20)
 
   # Start context for inter-protocol communication
-  SESSION_CONTEXT = zmq.Context()
-  SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.REP)
-  SESSION_SOCKET.bind("tcp://127.0.0.1:{}".format(LISTEN_SOCKET)) 
-  logging.info("Started ZMQ Socket at {}".format(LISTEN_SOCKET))
+  if(LISTEN_FOR_EXTERNAL_COMMANDS):
+    SESSION_CONTEXT = zmq.Context()
+    SESSION_SOCKET = SESSION_CONTEXT.socket(zmq.REP)
+    zmq_address = "tcp://127.0.0.1:{}".format(LISTEN_SOCKET)
+    SESSION_SOCKET.bind(zmq_address) 
+    logging.info("Started ZMQ Socket at {}".format(zmq_address))
 
   # Init session data (will be written to network)
-  SESSION_DATA["DOOR_LOCKED"] = False
-  SESSION_DATA["POWER_STATE"] = False # TODO: to be toggled on key-in/key-out (distinguish between AUX/full power for power saving considerations)
-  SESSION_DATA["SPEED"] = 0
-  SESSION_DATA["RPM"] = 0
+  updateSessionData("DOOR_LOCKED", False)
+  updateSessionData("POWER_STATE", False)
+  updateSessionData("SPEED", 0)
+  updateSessionData("RPM", 0)
 
   # Turn on the 'clown nose' for 3 seconds
   WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -152,28 +160,28 @@ def manage(packet):
     else:
       methodName = dstDir[dataString]
   except Exception, e:
-    if src != '80': logging.debug("Exception from packet manager [%s]" % e)
+    pass
+    #logging.debug("Exception from packet manager [%s]" % e)
     
   result = None
   if methodName != None:
     methodToCall = globals().get(methodName, None)
     if methodToCall:
-      if src != '80': logging.debug("Directive found for packet - %s" % methodName)
+      logging.debug("Directive found for packet - %s" % methodName)
       try:
         result = methodToCall(packet)
       except:
-        if src != '80': logging.error("Exception raised from [%s]" % methodName)
-        if src != '80': logging.error(traceback.format_exc())
+        logging.error("Exception raised from [%s]" % methodName)
+        logging.error(traceback.format_exc())
     
     else:
-      if src != '80': logging.debug("Method (%s) does not exist" % methodName)
-  else:
-    if src != '80': logging.debug("MethodName (%s) does not match a function" % methodName)
+      logging.debug("Method (%s) does not exist" % methodName)
 
   return result
-  
+
+# Listen for ibus messages, pass to packet manager if something substantial is found
 def listen():
-  global SESSION_DATA
+  global WRITE_SESSION_TO_FILE
 
   logging.info('Event listener initialized')
   while True:
@@ -183,18 +191,24 @@ def listen():
       manage(packet)
 
     # Check external messages
-    message = checkExternalMessages()
-    if message:
-      manageExternalMessages(message)
+    if LISTEN_FOR_EXTERNAL_COMMANDS:
+      message = checkExternalMessages()
+      if message:
+        manageExternalMessages(message)
 
-    # Write to session state to file
-    if SESSION_DATA["POWER_STATE"]: # if we are powered (and can assume router is online) push session data to socket
-      SESSION_DATA["SESSION"] = True
+    # Write to session state to file if configured to
+    if WRITE_SESSION_TO_FILE:
+      updateSessionData("SESSION", True)
 
-      # Open file for writing session data
-      session_file = open("/var/www/html/session.json","w")
-      session_file.write(json.dumps(SESSION_DATA))
-      session_file.close()
+      try: 
+        # Open file for writing session data
+        session_file = open(WRITE_SESSION_TO_FILE,"w")
+        session_file.write(json.dumps(SESSION_DATA))
+        session_file.close()
+      except Exception, e:
+        logging.error("Encountered error when writing session to server file: [{}]".format(e))
+        logging.debug("Turning off session file writes")
+        WRITE_SESSION_TO_FILE = False
 
     time.sleep(TICK) # sleep a bit
 
@@ -223,7 +237,7 @@ def manageExternalMessages(message):
 def checkExternalMessages():
   global SESSION_SOCKET
 
-  # Non-blocking, as to not interrupt parsing ibus messages
+  # Non-blocking, as to not interrupt parsing ibus messages. We just queue messages instead
   try:
     message = SESSION_SOCKET.recv(zmq.NOBLOCK)
     logging.debug("Got External Message: {}".format(message))
@@ -232,10 +246,30 @@ def checkExternalMessages():
   # IF no messages are queued
   except zmq.Again:
     return None
+  except zmq.ZMQError, e:
+    logging.error("Unexpected error when checking for external messages: [{}]".format(e))
 
+# Abstracted updating session data, allows for easier logging of update timing
+def updateSessionData(key, data):
+  global SESSION_DATA
+  now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+  SESSION_DATA[key] = data
+  SESSION_DATA["UPDATED_TIME"][key] = now
+
+  ##
+  # TODO: for publish-subscribe setups, send latest data to clients
+  ##
+
+# Shutdown pyBus
 def shutDown():
+  global SESSION_SOCKET, SESSION_CONTEXT
   logging.debug("Killing tick utility")
   pB_ticker.shutDown()
+
+  if LISTEN_FOR_EXTERNAL_COMMANDS:
+    logging.debug("Destroying ZMQ socket")
+    SESSION_SOCKET.close()
+    SESSION_CONTEXT.destroy()
 
 ############################################################################
 # FROM HERE ON ARE THE DIRECTIVES
@@ -248,23 +282,14 @@ def shutDown():
 # All directives should have a d_ prefix as we are searching GLOBALLY for function names.. so best have unique enough names
 ############################################################################
 def d_keyOut(packet):
-  global SESSION_DATA
-  SESSION_DATA["POWER_STATE"] = False
+  updateSessionData("POWER_STATE", False)
 
 def d_keyIn(packet):
-  global SESSION_DATA
-  SESSION_DATA["POWER_STATE"] = False
-  
-def d_update(packet):
-  pass
-  
-def d_RESET(packet):
-  pass
+  updateSessionData("POWER_STATE", True)
 
 # This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. 
 # But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
 def d_custom_IKE(packet):
-  global SESSION_DATA
   packet_data = packet['dat']
 
   # IKE Speed / RPM Info
@@ -272,37 +297,35 @@ def d_custom_IKE(packet):
     speed = int(packet_data[1], 16) * 2
     revs = int(packet_data[2], 16)
 
-    SESSION_DATA["SPEED"] = speed
-    SESSION_DATA["REVS"] = revs
-    speedTrigger(speed) # This is a silly little thing for changing track based on speed)
+    updateSessionData("SPEED", speed)
+    updateSessionData("RPM", revs)
   
   # IKE Ignition Status
   elif packet_data[0] == '11':
-    if (packet_data[1] == '00'): # Key Out. Should call d_keyOut or no?
-      SESSION_DATA["POWER_STATE"] = False
+    if (packet_data[1] == '00'): # Key Out.
+      updateSessionData("POWER_STATE", False)
     elif (packet_data[1] == '01'): # Pos 1
-      SESSION_DATA["POWER_STATE"] = "POS_1"
+      updateSessionData("POWER_STATE", "POS_1")
     elif (packet_data[1] == '03'): # Pos 2
-      SESSION_DATA["POWER_STATE"] = "POS_2"
+      updateSessionData("POWER_STATE", "POS_2")
     elif (packet_data[1] == '07'): # Start
-      SESSION_DATA["POWER_STATE"] = "START"
+      updateSessionData("POWER_STATE", "START")
 
   # IKE Temperature Status
   elif packet_data[0] == '19':
-    SESSION_DATA["OUTSIDE_TEMP"] = packet_data[1]
-    SESSION_DATA["COOLANT_TEMP"] = packet_data[2]
+    updateSessionData("OUTSIDE_TEMP", packet_data[1])
+    updateSessionData("COOLANT_TEMP", packet_data[2])
 
   # IKE OBC Estimated Range / Average Speed
   elif packet_data[0] == '24':
     if (packet_data[1] == '06'):
-      SESSION_DATA["RANGE_KM"] = packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]
+      updateSessionData("RANGE_KM", packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6])
     elif (packet_data[1] == '0A'):
-      SESSION_DATA["AVG_SPEED"] = packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]
+      updateSessionData("AVG_SPEED", packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6])
 
 def d_togglePause(packet):
-  pB_bt.pause()
+  pB_bt.togglePause()
 
-# NEXT command is invoked from the Radio. 
 def d_cdNext(packet):
   pB_bt.nextTrack()
 
@@ -311,37 +334,30 @@ def d_cdPrev(packet):
 
 def d_steeringNext(packet):
   #pB_bt.nextTrack()
-  _convertibleTopUp() # For testing
+  _rollWindowsUp() # For testing
 
 def d_steeringPrev(packet):
   #pB_bt.prevTrack()
   _convertibleTopDown() # For testing
 
 def d_steeringSpeak(packet):
-  pB_bt.pause()
+  _rollWindowsDown() # for testing
 
-# Respond to the Poll for changer alive
-def d_cdPollResponse(packet):
-  pass
-
-def d_testSpeed(packet):
-  speedTrigger(110)
-
-# Do whatever you like here regarding the speed!
-def speedTrigger(speed):
-  global SESSION_DATA
-  pass
+def d_steeringSpeakLong(packet):
+  _toggleModeButton()
 
 ################## DIRECTIVE UTILITY FUNCTIONS ##################
 
-def _toggleDoorLocks():
-  WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
+# Emulates pressing the "MODE" button on radio
+def _toggleModeButton():
+  WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
+  WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
 
-def _lockDoors():
+def _toggleDoorLocks():
   WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
 
-def _unlockDoors():
-  WRITER.writeBusPacket('00','BF', ['7A', '10', '20'])
+def _lockDoors():
+  WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
 
 def _openTrunk():
   WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
@@ -363,7 +379,11 @@ def _rollWindowsDown():
 # Put Convertible Top Down
 def _convertibleTopDown():
   #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
-  WRITER.writeBusPacket('3F', '00', ['0C', '7F', '01'])
+  _rollWindowsDown() # put windows down first?
+  # One of these ought to work
+  WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30'])
+  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30', 'F7'])
+  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '20'])
 
 # Put Convertible Top Up
 def _convertibleTopUp():
@@ -376,6 +396,8 @@ def _setTime(day, month, year, hour, minute):
   for c in [day, month, year, hour, minute]:
     if not isinstance(c, int) or c > 255 or c < 0:
       return False
+
+  logging.debug("Setting IKE time to {}/{}/{} {}:{}".format(day, month, year, hour, minute))
 
   # Write Hours : Minutes
   WRITER.writeBusPacket('3B', '80', ['40', '01', ('{:02x}'.format(hour)).upper(), ('{:02x}'.format(minute)).upper()])

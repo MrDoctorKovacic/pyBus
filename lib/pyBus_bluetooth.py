@@ -5,50 +5,13 @@ import bluetooth, logging, subprocess
 #####################################
 # GLOBALS
 #####################################
-PORT              = 4890 # Port number used for bluetooth RFCOMM
 CONNECTION_LIST   = dict() # Init empty dict for monitoring and checking connections {MAC:socket?}
-CLIENT            = False # Default to server
-SERVER_SOCK       = None # will be filled with socket object if above is true
 PHONE             = "4C:32:75:AD:98:24"
 
 #####################################
-
-##
 # TODO : Error handling, esp for sockets
-##
-
-# Open socket for recieving message
-def receiveMessages():
-    global SERVER_SOCK, CLIENT
-    CLIENT = True # show we're the client for better management
-
-    SERVER_SOCK=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-    SERVER_SOCK.bind(("", PORT))
-    SERVER_SOCK.listen(1)
-    client_sock,address = SERVER_SOCK.accept()
-    logging.debug("Accepted connection from " + str(address))
-
-    # Repeatedly accept data from server
-    while True:
-        data = client_sock.recv(1024)
-        logging.debug("received [%s]" % data)
-        yield data
-
-    client_sock.close()
-
-# Send a message to a MAC address
-def sendMessage(targetBluetoothMacAddress, message):
-    global CONNECTION_LIST
-    
-    # Add to our master list if new MAC address
-    if(targetBluetoothMacAddress not in CONNECTION_LIST.keys()):
-        sock = bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-        sock.connect((targetBluetoothMacAddress, PORT))
-        CONNECTION_LIST[targetBluetoothMacAddress] = sock
-    else:
-        sock = CONNECTION_LIST[targetBluetoothMacAddress] # Fetch from list otherwise
-
-    sock.send(message)
+#        All BT media controls should check return of dbus for failures  
+#
 
 # Search nearby devices
 def findNearbyDevices():
@@ -72,10 +35,6 @@ def isNearby(macAddr):
 def isConnected(macAddr):
     return False
 
-####
-# TODO: All BT media controls should check return of dbus for failures
-####
-
 # Will attempt to skip current Track
 def getMediaInfo(macAddr = PHONE):
     out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.freedesktop.DBus.Properties.Get", "string:org.bluez.MediaPlayer1", "string:Track"])
@@ -93,6 +52,10 @@ def nextTrack(macAddr = PHONE):
 def prevTrack(macAddr = PHONE):
     _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Previous"])
 
+# Checks for current pause / play status and toggles it
+def togglePause(macAddr = PHONE):
+    print(getDeviceInfo())
+
 # Will attempt to pause playing media
 def pause(macAddr = PHONE):
     _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Pause"])
@@ -100,16 +63,6 @@ def pause(macAddr = PHONE):
 # Will attempt to play media
 def play(macAddr = PHONE):
     _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Play"])
-
-# Shuts down the bluetooth sockets if necessary
-def shutdownBT():
-    if CLIENT:
-        SERVER_SOCK.close()
-    else:
-        # We're server, close off connections to clients
-        for sock in CONNECTION_LIST.values():
-            if sock:
-                sock.close()
 
 # Quick utility function to run a subprocess and return 
 def _runSubprocess(command):
@@ -135,5 +88,4 @@ def _parseDBusReply(message):
 
 if __name__ == "__main__":
     findNearbyDevices()
-    nextTrack()
-    shutdownBT()
+    togglePause()
