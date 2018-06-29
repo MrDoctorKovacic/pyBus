@@ -30,19 +30,24 @@ import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 DIRECTIVES = {
   '00' : {
     'BF' : {
+      '0200B9' : 'd_carUnlocked', # Unlocked via key
+      '7212DB' : 'd_carLocked', # Locked via key
       '7A1000' : None, # passenger door opened, probably
       '7A5202' : None # passenger door closed, probably
     }
   },
   '3F' : {
     '00' : {
-      '0C3401' : '' # All doors unlocked
+      '0C3401' : 'd_carUnlocked', # All doors unlocked
+      '0C4601' : 'd_passengerDoorLocked',
+      '0C4701' : 'd_driverDoorLocked',
     }
   },
   '44' : {
     'BF' : {
       '7401FF' : 'd_keyOut',
-      '7400FF' : 'd_keyIn'
+        '7400' : 'd_keyIn',
+          '7A' : 'd_windowDoorMessage'
     }
   },
   '50' : { # MF Steering Wheel Buttons
@@ -90,6 +95,12 @@ DIRECTIVES = {
       '380401' : None, # next Playlist function?
       '380800' : None,
       '380801' : None
+    }
+  },
+  'C0' : {
+    '68' : {
+      '3100000B' : None, # Mode button pressed
+      '3100134B' : None, # Mode button released
     }
   }
 }
@@ -294,6 +305,26 @@ def d_keyOut(packet):
 def d_keyIn(packet):
   updateSessionData("POWER_STATE", True)
 
+# Called whenever doors are locked.
+def d_carLocked(packet = None):
+  updateSessionData("DOOR_LOCKED_DRIVER", True)
+  updateSessionData("DOOR_LOCKED_PASSENGER", True)
+
+# Called whenever doors are unlocked.
+def d_carUnlocked(packet = None):
+  updateSessionData("DOOR_LOCKED_DRIVER", False)
+  updateSessionData("DOOR_LOCKED_PASSENGER", False)
+
+# Called whenever ONLY passenger door is locked
+# This isn't very often, especially on coupe models
+def d_passengerDoorLocked(packet):
+  updateSessionData("DOOR_LOCKED_PASSENGER", True)
+
+# Called whenever ONLY DRIVER door is locked
+# This isn't very often, especially on coupe models
+def d_driverDoorLocked(packet):
+  updateSessionData("DOOR_LOCKED_DRIVER", True)
+
 # This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. 
 # But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
 def d_custom_IKE(packet):
@@ -310,11 +341,14 @@ def d_custom_IKE(packet):
     elif (packet_data[1] == '07'): # Start
       updateSessionData("POWER_STATE", "START")
 
-  # Sensor Status
+  # Sensor Status, broadcasted every 10 seconds
   elif packet_data[0] == '13':
-    updateSessionData("SENSOR_STATUS", (packet_data[1]+packet_data[2]+packet_data[3]+packet_data[4]+packet_data[4]+packet_data[4]+packet_data[4]))
+    updateSessionData("IKE_SENSOR_STATUS", (packet_data[1]+packet_data[2]+packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]+packet_data[7]))
 
-  # Speed / RPM Info
+    # Byte 7 holds temp in c
+    updateSessionData("OUTSIDE_TEMP_2", int(packet_data[7], 16))
+
+  # Speed / RPM Info, broadcasted every 2 seconds
   elif packet_data[0] == '18':
     speed = int(packet_data[1], 16) * 2
     revs = int(packet_data[2], 16)
@@ -322,10 +356,13 @@ def d_custom_IKE(packet):
     updateSessionData("SPEED", int(speed, 16))
     updateSessionData("RPM", int(revs, 16)*100)
 
-  # Temperature Status
+  # Temperature Status, broadcasted every 10 seconds
   elif packet_data[0] == '19':
     updateSessionData("OUTSIDE_TEMP", int(packet_data[1], 16))
     updateSessionData("COOLANT_TEMP", int(packet_data[2], 16))
+
+    # Only for european models I believe, or if you've set this to be tracked with INPA/NCS. Otherwise 0
+    updateSessionData("OIL_TEMP", int(packet_data[3], 16))
 
   # OBC Estimated Range / Average Speed
   elif packet_data[0] == '24':
@@ -333,6 +370,10 @@ def d_custom_IKE(packet):
       updateSessionData("RANGE_KM", int((packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]), 16))
     elif (packet_data[1] == '0A'):
       updateSessionData("AVG_SPEED", int((packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]), 16))
+
+# Handles messages sent when door/window status changes
+def d_windowDoorMessage(packet):
+  pass
 
 def d_togglePause(packet):
   pB_bt.togglePause()
@@ -345,60 +386,97 @@ def d_cdPrev(packet):
 
 def d_steeringNext(packet):
   #pB_bt.nextTrack()
-  _rollWindowsUp() # For testing
+  rollWindowsUp() # For testing
 
 def d_steeringPrev(packet):
   #pB_bt.prevTrack()
-  _convertibleTopDown() # For testing
+  convertibleTopDown() # For testing
 
 def d_steeringSpeak(packet):
-  _rollWindowsDown() # for testing
+  rollWindowsDown() # for testing
 
 def d_steeringSpeakLong(packet):
-  _toggleModeButton()
+  toggleModeButton()
 
 ################## DIRECTIVE UTILITY FUNCTIONS ##################
 
 # Emulates pressing the "MODE" button on radio
-def _toggleModeButton():
+def toggleModeButton():
   WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
   WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
 
-def _toggleDoorLocks():
+# VERY loud, careful
+def turnOnAlarm():
+  WRITER.writeBusPacket('3F', '00', ['0C', '00', '55'])
+
+# Turns on flashers, including interior light
+def turnOnFlashers():
+  WRITER.writeBusPacket('3F', '00', ['0C', '00', '5B'])
+
+# Turns on hazards, including interior light
+def turnOnHazards():
+  WRITER.writeBusPacket('3F', '00', ['0C', '70', '01'])
+
+# Slowly dim interior lights
+def interiorLightsOff():
+  WRITER.writeBusPacket('3F', '00', ['0C', '00', '59'])
+
+def toggleDoorLocks():
   WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
   updateSessionData("DOOR_LOCKED_DRIVER", not SESSION_DATA["DOOR_LOCKED_DRIVER"])
   updateSessionData("DOOR_LOCKED_PASSENGER", not SESSION_DATA["DOOR_LOCKED_PASSENGER"])
 
-def _lockDoors():
+def lockDoors():
   WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
-  updateSessionData("DOOR_LOCKED_DRIVER", True)
-  updateSessionData("DOOR_LOCKED_PASSENGER", True)
+  d_carLocked() # Trigger car locked function
 
-def _openTrunk():
+def openTrunk():
   WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
   updateSessionData("TRUNK_OPEN", True)
 
 # Roll all 4 windows up
-def _rollWindowsUp():
+def rollWindowsUp():
   WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Put up window 1
   WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
   WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
   WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
+  updateSessionData("WINDOWS_STATUS", "UP")
 
 # Roll all 4 windows down
-def _rollWindowsDown():
+def rollWindowsDown():
+  WRITER.writeBusPacket('3F','00', ['0C', '00', '65']) # put down all windows?
+  '''
   WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Put down window 1
   WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Put down window 2
   WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Put down window 3
   WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
+  '''
+  updateSessionData("WINDOWS_STATUS", "DOWN")
+
+# Pops up windows "a piece"
+def popWindowsUp():
+  WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Pop up window 1
+  WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Pop up window 2
+  WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Pop up window 3
+  WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
+  updateSessionData("WINDOWS_STATUS", "UP") # this may not be 100% true
+
+# Pops down windows "a piece"
+def popWindowsDown():
+  WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Pop down window 1
+  WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Pop down window 2
+  WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Pop down window 3
+  WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Pop down window 3
+  updateSessionData("WINDOWS_STATUS", "POPPED_DOWN")
 
 # Put Convertible Top Down
-def _convertibleTopDown():
-  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30'])
+def convertibleTopDown():
+  #WRITER.writeBusPacket('3F', '00', ['0C', '99', '01'])
   WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
+  #WRITER.writeBusPacket('3F', '00', ['0C', '00', '66'])
 
 # Put Convertible Top Up
-def _convertibleTopUp():
+def convertibleTopUp():
   #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
   WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
 
@@ -417,5 +495,10 @@ def _setTime(day, month, year, hour, minute):
   WRITER.writeBusPacket('3B', '80', ['40', '02', ('{:02x}'.format(day)).upper(), ('{:02x}'.format(month)).upper(), ('{:02x}'.format(year)).upper()])
 
   return True
+
+# Soft "alarm", no noise but makes the car very visible
+def _softAlarm():
+  turnOnFlashers()
+  turnOnHazards()
 
 #################################################################
