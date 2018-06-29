@@ -33,7 +33,11 @@ DIRECTIVES = {
       '0200B9' : 'd_carUnlocked', # Unlocked via key
       '7212DB' : 'd_carLocked', # Locked via key
       '7A1000' : None, # passenger door opened, probably
-      '7A5202' : None # passenger door closed, probably
+      '7A5202' : None, # passenger door closed, probably
+      '7A5020' : None, # driver window popped up after closing door
+      '7A5021' : None, # driver door closed
+      '7A5120' : None, # driver window popped down before opening door
+      '7A5121' : None, # driver door opened
     }
   },
   '3F' : {
@@ -353,8 +357,8 @@ def d_custom_IKE(packet):
     speed = int(packet_data[1], 16) * 2
     revs = int(packet_data[2], 16)
 
-    updateSessionData("SPEED", int(speed, 16))
-    updateSessionData("RPM", int(revs, 16)*100)
+    updateSessionData("SPEED", speed)
+    updateSessionData("RPM", revs*100)
 
   # Temperature Status, broadcasted every 10 seconds
   elif packet_data[0] == '19':
@@ -444,13 +448,10 @@ def rollWindowsUp():
 
 # Roll all 4 windows down
 def rollWindowsDown():
-  WRITER.writeBusPacket('3F','00', ['0C', '00', '65']) # put down all windows?
-  '''
   WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Put down window 1
   WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Put down window 2
   WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Put down window 3
   WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
-  '''
   updateSessionData("WINDOWS_STATUS", "DOWN")
 
 # Pops up windows "a piece"
