@@ -299,16 +299,8 @@ def d_keyIn(packet):
 def d_custom_IKE(packet):
   packet_data = packet['dat']
 
-  # IKE Speed / RPM Info
-  if packet_data[0] == '18':
-    speed = int(packet_data[1], 16) * 2
-    revs = int(packet_data[2], 16)
-
-    updateSessionData("SPEED", speed)
-    updateSessionData("RPM", revs)
-  
-  # IKE Ignition Status
-  elif packet_data[0] == '11':
+  # Ignition Status
+  if packet_data[0] == '11':
     if (packet_data[1] == '00'): # Key Out.
       updateSessionData("POWER_STATE", False)
     elif (packet_data[1] == '01'): # Pos 1
@@ -318,17 +310,29 @@ def d_custom_IKE(packet):
     elif (packet_data[1] == '07'): # Start
       updateSessionData("POWER_STATE", "START")
 
-  # IKE Temperature Status
-  elif packet_data[0] == '19':
-    updateSessionData("OUTSIDE_TEMP", packet_data[1])
-    updateSessionData("COOLANT_TEMP", packet_data[2])
+  # Sensor Status
+  elif packet_data[0] == '13':
+    updateSessionData("SENSOR_STATUS", (packet_data[1]+packet_data[2]+packet_data[3]+packet_data[4]+packet_data[4]+packet_data[4]+packet_data[4]))
 
-  # IKE OBC Estimated Range / Average Speed
+  # Speed / RPM Info
+  elif packet_data[0] == '18':
+    speed = int(packet_data[1], 16) * 2
+    revs = int(packet_data[2], 16)
+
+    updateSessionData("SPEED", int(speed, 16))
+    updateSessionData("RPM", int(revs, 16)*100)
+
+  # Temperature Status
+  elif packet_data[0] == '19':
+    updateSessionData("OUTSIDE_TEMP", int(packet_data[1], 16))
+    updateSessionData("COOLANT_TEMP", int(packet_data[2], 16))
+
+  # OBC Estimated Range / Average Speed
   elif packet_data[0] == '24':
     if (packet_data[1] == '06'):
-      updateSessionData("RANGE_KM", packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6])
+      updateSessionData("RANGE_KM", int((packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]), 16))
     elif (packet_data[1] == '0A'):
-      updateSessionData("AVG_SPEED", packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6])
+      updateSessionData("AVG_SPEED", int((packet_data[3]+packet_data[4]+packet_data[5]+packet_data[6]), 16))
 
 def d_togglePause(packet):
   pB_bt.togglePause()
@@ -362,12 +366,17 @@ def _toggleModeButton():
 
 def _toggleDoorLocks():
   WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
+  updateSessionData("DOOR_LOCKED_DRIVER", not SESSION_DATA["DOOR_LOCKED_DRIVER"])
+  updateSessionData("DOOR_LOCKED_PASSENGER", not SESSION_DATA["DOOR_LOCKED_PASSENGER"])
 
 def _lockDoors():
   WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
+  updateSessionData("DOOR_LOCKED_DRIVER", True)
+  updateSessionData("DOOR_LOCKED_PASSENGER", True)
 
 def _openTrunk():
   WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
+  updateSessionData("TRUNK_OPEN", True)
 
 # Roll all 4 windows up
 def _rollWindowsUp():
@@ -385,12 +394,8 @@ def _rollWindowsDown():
 
 # Put Convertible Top Down
 def _convertibleTopDown():
-  #WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
-  _rollWindowsDown() # put windows down first?
-  # One of these ought to work
-  WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30'])
-  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30', 'F7'])
-  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '20'])
+  #WRITER.writeBusPacket('00', 'BF', ['7D', '00', '30'])
+  WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
 
 # Put Convertible Top Up
 def _convertibleTopUp():
