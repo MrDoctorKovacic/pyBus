@@ -135,7 +135,7 @@ class ibusFace ( ):
     packet['dat'] = dataTmp
     packet['xor'] = self.readChar()
     valStr = [packet['src'], packet['len'], packet['dst'], packet['dat'], packet['xor']]
-    logging.debug("READ: [%s -> %s] %s" % (packet["src"], packet["dst"], valStr))
+    logging.debug("READ: [%s -> %s] %s" % (LOCATIONS[packet["src"]], LOCATIONS[packet["dst"]], valStr))
     return packet
 
   # Read in one character from the bus and convert to hex
