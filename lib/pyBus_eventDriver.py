@@ -380,27 +380,28 @@ def d_windowDoorMessage(packet):
   pass
 
 def d_togglePause(packet):
-  pB_bt.togglePause()
+  #pB_bt.togglePause()
+  pass
 
 def d_cdNext(packet):
-  pB_bt.nextTrack()
+  pass
 
 def d_cdPrev(packet):
-  pB_bt.prevTrack()  
+  pass
 
 def d_steeringNext(packet):
   #pB_bt.nextTrack()
-  rollWindowsUp() # For testing
+  pass
 
 def d_steeringPrev(packet):
   #pB_bt.prevTrack()
-  convertibleTopDown() # For testing
+  pass
 
 def d_steeringSpeak(packet):
-  rollWindowsDown() # for testing
+  toggleModeButton()
 
 def d_steeringSpeakLong(packet):
-  toggleModeButton()
+  pass
 
 ################## DIRECTIVE UTILITY FUNCTIONS ##################
 
