@@ -91,11 +91,13 @@ class ibusFace ( ):
   def waitClearBus(self):
     logging.debug("Waiting for clear bus")
     oldTime = time.time()
+    totalTime = 0
     while True:
       # Wait for large interval between packets
       self.readChar() # will be src packet if there was a significant delay between packets. Otherwise its nothing useful
       newTime = time.time()
       deltaTime = newTime - oldTime
+      totalTime += deltaTime # Tracking how long we've spent waiting
       oldTime = newTime
       if deltaTime > 0.1:
         break # we have found a significant delay in signals, but have swallowed the first character in doing so.
