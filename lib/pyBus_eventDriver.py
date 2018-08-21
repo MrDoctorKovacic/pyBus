@@ -12,7 +12,6 @@ import datetime
 import zmq
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
-import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible

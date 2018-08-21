@@ -2,7 +2,6 @@
 
 import os, sys, time, signal, json, logging, traceback
 import threading
-import pyBus_bluetooth as pB_bt
 
 #import pyBus_module_display as pB_display # Only events can manipulate the display stack
 #import pyBus_module_audio as pB_audio # Add the audio module as it will only be manipulated from here in pyBus
@@ -107,11 +106,4 @@ def pollResponse(arguments):
 
 def announce(arguments):
   #WRITER.writeBusPacket('18', 'FF', ['02', '01'])
-  pass
-
-def sendBluetooth(arguments):
-  pB_bt.sendMessage(arguments[0], arguments[1])
-
-def scanBluetooth(arguments):
-  #pB_bt.findNearbyDevices()
   pass
