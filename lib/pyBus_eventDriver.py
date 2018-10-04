@@ -134,7 +134,7 @@ def init(writer):
 	pB_ticker.init(WRITER)
 	
 	# Start PyBus logging Session
-	SESSION = pB_session.ibusSession(True, True)
+	SESSION = pB_session.ibusSession(LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_SOCKET)
 
 	# Init session data (will be written to network)
 	SESSION.updateData("DOOR_LOCKED", False)
