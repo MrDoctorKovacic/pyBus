@@ -205,11 +205,11 @@ def listen():
 
 # Shutdown pyBus
 def shutDown():
-	logging.debug("Killing tick utility")
-	pB_ticker.shutDown()
-
 	if LISTEN_FOR_EXTERNAL_COMMANDS:
 		SESSION.close()
+
+	logging.debug("Killing tick utility")
+	pB_ticker.shutDown()
 
 ############################################################################
 # FROM HERE ON ARE THE DIRECTIVES

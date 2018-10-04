@@ -24,6 +24,7 @@ class ibusSession():
 		# TODO: Attempt to load from previous file to init with
 		#
 		self.data = {}
+		self.socket = None
 
 		# Open file for writing session data
 		if(init_session_file):
