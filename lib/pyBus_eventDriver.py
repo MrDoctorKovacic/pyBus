@@ -430,7 +430,7 @@ def _softAlarm():
 #################################################################
 
 # Handles various external messages, usually by calling an ibus directive
-def manageExternalMessages(self, message):
+def manageExternalMessages(message):
 	message_array = json.loads(message)
 	logging.debug(message_array)
 
