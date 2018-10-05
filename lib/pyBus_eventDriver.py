@@ -195,7 +195,7 @@ def listen():
 		if LISTEN_FOR_EXTERNAL_COMMANDS:
 			message = SESSION.checkExternalMessages()
 			if message:
-				SESSION.manageExternalMessages(message)
+				manageExternalMessages(message)
 
 		# Write all this to a file
 		if SESSION.write_to_file:
@@ -428,3 +428,27 @@ def _softAlarm():
 	turnOnHazards()
 
 #################################################################
+
+# Handles various external messages, usually by calling an ibus directive
+def manageExternalMessages(self, message):
+	message_array = json.loads(message)
+	logging.debug(message_array)
+
+	# Directive / Bluetooth command verbatim
+	if "directive" in message_array:
+		try:
+			# Messy, but calls a directive given the chance
+			methodToCall = globals().get(message_array["directive"], None)
+			data = methodToCall()
+
+			# Either send (requested) data or an acknowledgement back to node
+			if data is not None:
+				response = json.dumps(data)
+			else:
+				response = "OK" # 10-4
+			SESSION.socket.send(response) 
+
+			logging.debug("Sending response: {}".format(response))
+
+		except Exception, e:
+			logging.error("Failed to call directive from external command.\n{}".format(e))

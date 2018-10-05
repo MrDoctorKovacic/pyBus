@@ -69,31 +69,7 @@ class ibusSession():
 			self.data["UPDATED_TIME"][key] = None
 
 		self.data["UPDATED_TIME"][key] = now
-
-	# Handles various external messages, usually by calling an ibus directive
-	def manageExternalMessages(self, message):
-		message_array = json.loads(message)
-		logging.debug(message_array)
-
-		# Directive / Bluetooth command verbatim
-		if "directive" in message_array:
-			try:
-				# Messy, but calls a directive given the chance
-				methodToCall = globals().get(message_array["directive"], None)
-				data = methodToCall()
-
-				# Either send (requested) data or an acknowledgement back to node
-				if data is not None:
-					response = json.dumps(data)
-				else:
-					response = "OK" # 10-4
-				self.socket.send(response) 
-
-				logging.debug("Sending response: {}".format(response))
-
-			except Exception, e:
-				logging.error("Failed to call directive from external command.\n{}".format(e))
-
+		
 	# Checks for any external messages sent to socket,
 	def checkExternalMessages(self):
 
