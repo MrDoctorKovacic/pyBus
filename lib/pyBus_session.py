@@ -89,6 +89,8 @@ class ibusSession():
 					response = "OK" # 10-4
 				self.socket.send(response) 
 
+				logging.debug("Sending response: {}".format(response))
+
 			except Exception, e:
 				logging.error("Failed to call directive from external command.\n{}".format(e))
 
