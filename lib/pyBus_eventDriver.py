@@ -132,7 +132,7 @@ def init(writer):
 
 	# Attempt to connect phone through bluetooth, do before waiting on clear ibus
 	pB_bt.connect()
-	pB_bt.play()
+	pB_bt.playDelayed()
 
 	# Start ibus writer
 	WRITER = writer
