@@ -52,7 +52,7 @@ def isConnected(macAddr):
 def connect(macAddr=PHONE):
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 	                            "/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"])
-	_runSubprocess(["/usr/local/bin/a2dp-agent"])
+	_runSubprocess(["/usr/local/bin/a2dp-agent"], runInBackground=True)
 	return out
 
 # Will attempt to skip current Track
