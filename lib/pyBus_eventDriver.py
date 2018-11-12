@@ -12,6 +12,7 @@ import datetime
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
+import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
@@ -141,6 +142,9 @@ def init(writer):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("SPEED", 0)
 	SESSION.updateData("RPM", 0)
+
+	# Attempt to connect phone through bluetooth
+	pB_bt.connect()
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -338,14 +342,17 @@ def toggleModeButton():
 def turnOnAlarm():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '55'])
 
+# NW
 # Turns on flashers, including interior light
 def turnOnFlashers():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '5B'])
 
+# NW
 # Turns on hazards, including interior light
 def turnOnHazards():
 	WRITER.writeBusPacket('3F', '00', ['0C', '70', '01'])
 
+# NW
 # Slowly dim interior lights
 def interiorLightsOff():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '59'])
@@ -379,6 +386,7 @@ def rollWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
 	SESSION.updateData("WINDOWS_STATUS", "DOWN")
 
+# NW
 # Pops up windows "a piece"
 def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Pop up window 1
@@ -387,6 +395,7 @@ def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
 	SESSION.updateData("WINDOWS_STATUS", "UP") # this may not be 100% true
 
+# NW
 # Pops down windows "a piece"
 def popWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Pop down window 1
