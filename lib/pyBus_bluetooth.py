@@ -85,7 +85,7 @@ def play(macAddr=PHONE):
 
 # Will attempt to play media after a short delay
 def playDelayed(macAddr=PHONE):
-    _runSubprocess(["sleep", "5", "&&" "dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+    _runSubprocess(["sleep", "5", "&&", "dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
                    "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Play"], runInBackground=True)
 
 
