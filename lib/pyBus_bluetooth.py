@@ -83,10 +83,11 @@ def _runSubprocess(command):
 # Parse the formatting of the dbus return value into JSON
 def _parseDBusReply(message):
     jsonDict = dict()
-    for p in message.split():
-        for q in p.split('=:'):
-            if len(q):
-                jsonDict[q[0]] = q[1]
+    if message:
+		for p in message.split():
+			for q in p.split('=:'):
+				if len(q):
+					jsonDict[q[0]] = q[1]
 
     logging.debug("DBUS message: {}".format(jsonDict))
     return jsonDict    
