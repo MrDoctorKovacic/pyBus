@@ -85,19 +85,18 @@ def play(macAddr=PHONE):
 
 # Will attempt to play media after a short delay
 def playDelayed(macAddr=PHONE):
-    _runSubprocess(["sleep", "5", "&&", "dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
-                   "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Play"], runInBackground=True)
+    _runSubprocess(["sleep 5 && dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_{}/player0 org.bluez.MediaPlayer1.Play".format(macAddr.replace(':', '_'))], runInBackground=True)
 
 
 # Quick utility function to run a subprocess and return
 def _runSubprocess(command, runInBackground=False):
     try:
 		if runInBackground:
-			subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+			subprocess.call(command, stdout=subprocess.PIPE, shell=True)
 		else:
 			process = subprocess.Popen(command, stdout=subprocess.PIPE)
-        	out, err = process.communicate()
-        	return [_parseDBusReply(out), _parseDBusReply(err)]
+			out, err = process.communicate()
+			return [_parseDBusReply(out), _parseDBusReply(err)]
     except Exception, e:
         logging.error("Failed to run command: {}".format(command))
         logging.error(e)
