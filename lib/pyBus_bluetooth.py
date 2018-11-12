@@ -93,7 +93,7 @@ def playDelayed(macAddr=PHONE):
 def _runSubprocess(command, runInBackground=False):
     try:
 		if runInBackground:
-			subprocess.Popen(command, stdout=subprocess.PIPE)
+			subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
 		else:
 			process = subprocess.Popen(command, stdout=subprocess.PIPE)
         	out, err = process.communicate()
