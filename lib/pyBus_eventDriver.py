@@ -130,6 +130,10 @@ SESSION = None
 def init(writer):
 	global WRITER, SESSION
 
+	# Attempt to connect phone through bluetooth, do before waiting on clear ibus
+	pB_bt.connect()
+	pB_bt.play()
+
 	# Start ibus writer
 	WRITER = writer
 	pB_ticker.init(WRITER)
@@ -142,10 +146,6 @@ def init(writer):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("SPEED", 0)
 	SESSION.updateData("RPM", 0)
-
-	# Attempt to connect phone through bluetooth
-	pB_bt.connect()
-	pB_bt.play()
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
