@@ -59,7 +59,7 @@ def prevTrack(macAddr = PHONE):
 
 # Checks for current pause / play status and toggles it
 def togglePause(macAddr = PHONE):
-    print(getDeviceInfo())
+    return getDeviceInfo()
 
 # Will attempt to pause playing media
 def pause(macAddr = PHONE):

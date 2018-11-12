@@ -145,6 +145,7 @@ def init(writer):
 
 	# Attempt to connect phone through bluetooth
 	pB_bt.connect()
+	pB_bt.play()
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -302,8 +303,7 @@ def d_windowDoorMessage(packet):
 	pass
 
 def d_togglePause(packet):
-	#pB_bt.togglePause()
-	pass
+	logging.debug(pB_bt.togglePause())
 
 def d_cdNext(packet):
 	pass
