@@ -17,29 +17,6 @@ PHONE = "4C:32:75:AD:98:24"
 #        All BT media controls should check return of dbus for failures
 #
 
-# Search nearby devices
-def findNearbyDevices():
-    global CONNECTION_LIST
-
-    nearby_devices = bluetooth.discover_devices()
-    for bdaddr in nearby_devices:
-        logging.debug(str(bluetooth.lookup_name(bdaddr)) +
-                      " [" + str(bdaddr) + "]")
-
-    # Update our master list of nearby devices, cleanup clients that have disconnected
-    for bdaddr in CONNECTION_LIST.keys():
-        if bdaddr not in nearby_devices:
-            CONNECTION_LIST[bdaddr].close()
-            CONNECTION_LIST[bdaddr] = False
-
-# Quick check for a specific MAC address
-def isNearby(macAddr):
-    return (macAddr in CONNECTION_LIST and CONNECTION_LIST[macAddr] is not False)
-
-# Check for connected BT device to Lucio
-def isConnected(macAddr):
-    return False
-
 # Connect a bluetooth device, typically run at startup
 def connect(macAddr=PHONE):
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
@@ -111,8 +88,4 @@ def _parseDBusReply(message):
 					jsonDict[q[0]] = q[1]
 
     logging.debug("DBUS message: {}".format(jsonDict))
-    return jsonDict    
-
-if __name__ == "__main__":
-    findNearbyDevices()
-    togglePause()
+    return jsonDict

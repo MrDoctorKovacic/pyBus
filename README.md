@@ -9,6 +9,7 @@ This is to be used with the USB interface which can be acquired from [Reslers.de
 * Interfaces with the BMW iBus to send and receive button presses, status changes, vehicle info, etc.
 * Records state of car for other devices to play with
 * Listens on socket for predefined ibus functions to be run. 
+* Handles Bluetooth media commands through dbus.
 
 ### Useful links
 http://web.archive.org/web/20041204074622/www.openbmw.org/bus/  
@@ -22,7 +23,7 @@ All software is in early alpha stages! K/I-Bus issues can be painful to diagnose
 * ZeroMQ, used for communicating with the outside world. 
 	* https://github.com/MonsieurV/ZeroMQ-RPi 
 * python, python-setuptools, python-dev 
-	* `apt-get install python python-setuptools`
+	* `apt-get install python python-setuptools bluetooth bluez python-bluez`
 * **Python modules:** pyserial pyzmq
 	* `pip install pyserial pyzmq` 
 ## How to use
