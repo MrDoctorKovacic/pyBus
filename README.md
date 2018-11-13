@@ -20,7 +20,7 @@ http://www.online-rubin.de/BMW/I-Bus/I-BUS%20Codes%20e46.htm
 All software is in early alpha stages! K/I-Bus issues can be painful to diagnose and fix, so please don't use this to mess up your car.
 
 ## Pre-Requisites
-* ZeroMQ, used for communicating with the outside world. 
+* ZeroMQ, for communicating with the outside world. 
 	* https://github.com/MonsieurV/ZeroMQ-RPi 
 * python, python-setuptools, python-dev 
 	* `apt-get install python python-setuptools bluetooth bluez python-bluez`

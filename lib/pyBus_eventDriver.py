@@ -312,12 +312,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	#pB_bt.nextTrack()
-	pass
+	pB_bt.nextTrack()
 
 def d_steeringPrev(packet):
-	#pB_bt.prevTrack()
-	pass
+	pB_bt.prevTrack()
 
 def d_steeringSpeak(packet):
 	toggleModeButton()
