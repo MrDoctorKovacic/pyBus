@@ -353,15 +353,15 @@ def d_windowDoorMessage(packet):
 
 # Handles Rain/Light sensor data. TODO: find what light/dark is and wet/dry is
 def d_rainLightSensor(packet):
-	SESSION.updateData("RAIN_LIGHT_SENSOR_STATUS", (str(packet['dat'])))
+	SESSION.updateData("RAIN_LIGHT_SENSOR_STATUS", (''.join(packet['dat'])))
 
 # Handles raw climate control (Integrated Heating And Air Conditioning) data
 def d_climateControl(packet):
-	SESSION.updateData("CLIMATE_CONTROL_STATUS", (str(packet['dat'])))
+	SESSION.updateData("CLIMATE_CONTROL_STATUS", (''.join(packet['dat'])))
 
 # Handles any unknown diagnostic packets for logging
 def d_diagnostic(packet):
-	SESSION.updateData("DIAGNOSTIC", (str(packet['dat'])))
+	SESSION.updateData("DIAGNOSTIC", (''.join(packet['dat'])))
 
 def d_togglePause(packet):
 	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
