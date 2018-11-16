@@ -44,9 +44,11 @@ DIRECTIVES = {
 	},
 	'3F' : {
 		'00' : {
+			''
 			'0C3401' : 'd_carUnlocked', # All doors unlocked
 			'0C4601' : 'd_passengerDoorLocked',
 			'0C4701' : 'd_driverDoorLocked',
+			'OTHER'  : 'd_diagnostic'
 		}
 	},
 	'44' : {
@@ -211,8 +213,10 @@ def manage(packet):
 		dstDir = DIRECTIVES[src][dst]
 		if ('ALL'  in dstDir.keys()):
 			methodName = dstDir['ALL']
-		else:
+		elif (dataString in dstDir):
 			methodName = dstDir[dataString]
+		elif ('OTHER' in dstDir.keys()):
+			methodName = dstDir['OTHER']
 	except Exception, e:
 		logging.debug("Exception from packet manager [%s]" % e)
 		
@@ -347,11 +351,17 @@ def d_custom_IKE(packet):
 def d_windowDoorMessage(packet):
 	pass
 
+# Handles Rain/Light sensor data. TODO: find what light/dark is and wet/dry is
 def d_rainLightSensor(packet):
-	SESSION.updateData("RAIN_LIGHT_SENSOR_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
+	SESSION.updateData("RAIN_LIGHT_SENSOR_STATUS", (packet['dat']))
 
+# Handles raw climate control (Integrated Heating And Air Conditioning) data
 def d_climateControl(packet):
-	SESSION.updateData("CLIMATE_CONTROL_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
+	SESSION.updateData("CLIMATE_CONTROL_STATUS", (packet['dat']))
+
+# Handles any unknown diagnostic packets for logging
+def d_diagnostic(packet):
+	SESSION.updateData("DIAGNOSTIC", (packet['dat']))
 
 def d_togglePause(packet):
 	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
