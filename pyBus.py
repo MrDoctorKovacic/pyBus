@@ -44,7 +44,7 @@ def createParser():
   parser.add_argument('--with-bt', action='store', help='Bluetooth address of media device.')
   parser.add_argument('--with-zmq', action='store', help='ZMQ port to listen on.')
   parser.add_argument('--with-session', action='store', help='File to output momentary session.')
-  parser.add_argument('--with-mysql', action='store', nargs="3", help='MySQL Username, Password, and Database to log session. Table log_serial will be created if it does not exist.')
+  parser.add_argument('--with-mysql', action='store', nargs=3, help='MySQL Username, Password, and Database to log session. Table log_serial will be created if it does not exist.')
   return parser
 
 #####################################
