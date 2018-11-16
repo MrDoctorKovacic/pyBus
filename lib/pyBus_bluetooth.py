@@ -17,12 +17,11 @@ def connect(macAddr=PHONE):
 	global PHONE
 	PHONE = macAddr
 	logging.debug("Connecting bluetooth media address {}.".format(macAddr))
-	
-	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+
+	out = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 								"/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"], runInBackground=True)
 	_runSubprocess(["/usr/local/bin/a2dp-agent"], runInBackground=True)
-	if error:
-		logging.error("Error when running connect dbus command: {}".format(error))
+
 	return out
 
 # Will attempt to skip current Track
