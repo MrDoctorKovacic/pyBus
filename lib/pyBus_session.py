@@ -28,6 +28,7 @@ class ibusSession():
 		self.data = {}
 		self.modified = True
 		self.db = None
+		self.write_to_file = False
 
 		# Open file for writing session data
 		if init_session_file:
