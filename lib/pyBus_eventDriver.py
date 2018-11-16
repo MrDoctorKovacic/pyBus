@@ -144,7 +144,7 @@ def init(writer, args):
 
 		# Attempt to connect phone through bluetooth, 
 		# Non-blocking, do before waiting on clear ibus
-		pB_bt.connect(args.with_bt)
+		pB_bt.connect(args.with_bt[0])
 		pB_bt.playDelayed()
 
 	# Setup ZMQ
