@@ -9,7 +9,6 @@ import logging
 import argparse
 import gzip
 import pyBus_core as core
-import zmq
 
 #####################################
 # FUNCTIONS
@@ -40,26 +39,34 @@ def configureLogging(numeric_level):
   
 def createParser():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbose', action='count', default=0, help='Increases verbosity of logging.')
-  parser.add_argument('--device', action='store', help='Path to iBus USB interface (Bought from reslers.de)')
+  parser.add_argument('-v', '--verbose', action='count', default=20, help='Increases verbosity of logging.')
+  parser.add_argument('--device', action='store', help='Path to iBus interface.')
+  parser.add_argument('--with-bt', action='store', help='Bluetooth address of media device.')
+  parser.add_argument('--with-zmq', action='store', help='ZMQ port to listen on.')
+  parser.add_argument('--with-session', action='store', help='File to output momentary session.')
+  parser.add_argument('--with-mysql', action='store', nargs="3", help='MySQL Username, Password, and Database to log session. Table log_serial will be created if it does not exist.')
   return parser
 
 #####################################
 # MAIN
 #####################################
 parser   = createParser()
-results  = parser.parse_args()
-loglevel = results.verbose
+args  = parser.parse_args()
+loglevel = args.verbose
 _startup_cwd = os.getcwd()
 
 signal.signal(signal.SIGINT, signal_handler_quit) # Manage Ctrl+C
 configureLogging(loglevel)
 
-devPath = sys.argv[1] if (len(sys.argv) > 1) else "/dev/ttyUSB0"
+devPath = args.device if args.device else "/dev/ttyUSB0"
 core.DEVPATH = devPath if devPath else "/dev/ttyUSB0"
 
+# Conditionally import ZMQ
+if args.with_zmq:
+	import zmq
+
 try:
-  core.initialize()
+  core.initialize(args)
   core.run()
 except Exception:
   logging.error("Caught unexpected exception:")

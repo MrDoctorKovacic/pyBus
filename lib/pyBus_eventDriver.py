@@ -12,7 +12,10 @@ import datetime
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
-import pyBus_bluetooth as pB_bt # For bluetooth audio controls
+
+# Optional modules to be imported conditionally
+pB_bt = None
+pB_mysql = None
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
@@ -113,35 +116,68 @@ DIRECTIVES = {
 # CONFIG
 #####################################
 TICK = 0.02 # sleep interval in seconds used between iBUS reads
-WRITE_SESSION_TO_FILE = "/var/www/html/session.json" # If we should be writing collected data to a file at the webroot. False if we shouldn't be writing at all
-LISTEN_FOR_EXTERNAL_COMMANDS = True # If we should open a port to listen for commands from network
-LISTEN_SOCKET = 4884 # port that we listen on for external messages (from other networked pis)
 
 #####################################
 # Define Globals
 #####################################
 WRITER = None
 SESSION = None
+SESSION_FILE = None
+LISTEN_FOR_EXTERNAL_COMMANDS = False
+LISTEN_PORT = None
+MYSQL_CRED = None
 
 #####################################
 # FUNCTIONS
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
-def init(writer):
-	global WRITER, SESSION
+def init(writer, args):
+	global pB_bt, pB_session
+	global WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED
 
-	# Attempt to connect phone through bluetooth, do before waiting on clear ibus
-	pB_bt.connect()
-	pB_bt.playDelayed()
+	#
+	# Parse sys arguments to set up optional data loging modules
+	#
+
+	# Setup Bluetooth
+	if args.with_bt:
+		import pyBus_bluetooth as pB_bt # For bluetooth audio controls
+
+		# Attempt to connect phone through bluetooth, 
+		# Non-blocking, do before waiting on clear ibus
+		pB_bt.PHONE = args.with_bt
+		pB_bt.connect()
+		pB_bt.playDelayed()
+
+	# Setup ZMQ
+	if args.with_zmq:
+		# Session object for writing and sending log info abroad
+		LISTEN_FOR_EXTERNAL_COMMANDS = True
+		LISTEN_PORT = args.with_zmq
+
+	# Setup Session IO
+	if args.with_session:
+		# Session object for writing and sending log info abroad
+		SESSION_FILE = args.with_session
+		LISTEN_PORT = args.with_zmq
+
+	# Setup MySQL
+	if args.with_mysql:
+		# Session object for writing and sending log info abroad
+		MYSQL_CRED = args.with_mysql
+
+	#
+	# End argument/module parsing
+	#
 
 	# Start ibus writer
 	WRITER = writer
 	pB_ticker.init(WRITER)
-	
-	# Start PyBus logging Session
-	SESSION = pB_session.ibusSession(WRITE_SESSION_TO_FILE, LISTEN_SOCKET)
 
-	# Init session data (will be written to network)
+	# Start PyBus logging Session
+	SESSION = pB_session.ibusSession(SESSION_FILE, LISTEN_PORT, MYSQL_CRED)
+
+	# Init default session data
 	SESSION.updateData("DOOR_LOCKED", False)
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("SPEED", 0)
@@ -168,14 +204,13 @@ def manage(packet):
 		else:
 			methodName = dstDir[dataString]
 	except Exception, e:
-		pass
-		#logging.debug("Exception from packet manager [%s]" % e)
+		logging.debug("Exception from packet manager [%s]" % e)
 		
 	result = None
 	if methodName != None:
 		methodToCall = globals().get(methodName, None)
 		if methodToCall:
-			logging.debug("Directive found for packet - %s" % methodName)
+			logging.info("Directive found for packet - %s" % methodName)
 			try:
 				result = methodToCall(packet)
 			except:
@@ -183,7 +218,7 @@ def manage(packet):
 				logging.error(traceback.format_exc())
 		
 		else:
-			logging.debug("Method (%s) does not exist" % methodName)
+			logging.warning("Method (%s) does not exist" % methodName)
 
 	return result
 
@@ -203,7 +238,7 @@ def listen():
 				manageExternalMessages(message)
 
 		# Write all this to a file
-		if SESSION.write_to_file:
+		if SESSION and SESSION.write_to_file and SESSION.modified:
 			SESSION.write()
 
 		time.sleep(TICK) # sleep a bit
@@ -213,7 +248,7 @@ def shutDown():
 	if LISTEN_FOR_EXTERNAL_COMMANDS:
 		SESSION.close()
 
-	logging.debug("Killing tick utility")
+	logging.info("Killing tick utility")
 	pB_ticker.shutDown()
 
 ############################################################################
@@ -303,7 +338,8 @@ def d_windowDoorMessage(packet):
 	pass
 
 def d_togglePause(packet):
-	logging.debug(pB_bt.togglePause())
+	if pB_bt:
+		logging.debug(pB_bt.togglePause())
 
 def d_cdNext(packet):
 	pass
@@ -312,10 +348,12 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	pB_bt.nextTrack()
+	if pB_bt:
+		pB_bt.nextTrack()
 
 def d_steeringPrev(packet):
-	pB_bt.prevTrack()
+	if pB_bt:
+		pB_bt.prevTrack()
 
 def d_steeringSpeak(packet):
 	toggleModeButton()
@@ -420,7 +458,7 @@ def _setTime(day, month, year, hour, minute):
 		if not isinstance(c, int) or c > 255 or c < 0:
 			return False
 
-	logging.debug("Setting IKE time to {}/{}/{} {}:{}".format(day, month, year, hour, minute))
+	logging.info("Setting IKE time to {}/{}/{} {}:{}".format(day, month, year, hour, minute))
 
 	# Write Hours : Minutes
 	WRITER.writeBusPacket('3B', '80', ['40', '01', ('{:02x}'.format(hour)).upper(), ('{:02x}'.format(minute)).upper()])
@@ -455,7 +493,7 @@ def manageExternalMessages(message):
 				response = "OK" # 10-4
 			SESSION.socket.send(response) 
 
-			logging.debug("Sending response: {}".format(response))
+			logging.info("Sending response: {}".format(response))
 
 		except Exception, e:
 			logging.error("Failed to call directive from external command.\n{}".format(e))
