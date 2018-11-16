@@ -76,9 +76,9 @@ DIRECTIVES = {
 			'3BA0' : None # Dial button, released
 		}
 	},
-	'80' : {
-		'BF' : {
-			'ALL' : 'd_custom_IKE' # Use ALL to send all data to a particular function
+	'5B' : {
+		'80' : {
+			'ALL' : 'd_climateControl'
 		}
 	},
 	'68' : {
@@ -101,6 +101,11 @@ DIRECTIVES = {
 			'380401' : None, # next Playlist function?
 			'380800' : None,
 			'380801' : None
+		}
+	},
+	'80' : {
+		'BF' : {
+			'ALL' : 'd_custom_IKE' # Use ALL to send all data to a particular function
 		}
 	},
 	'C0' : {
@@ -343,7 +348,10 @@ def d_windowDoorMessage(packet):
 	pass
 
 def d_rainLightSensor(packet):
-	SESSION.updateData("RAIN_SENSOR_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
+	SESSION.updateData("RAIN_LIGHT_SENSOR_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
+
+def d_climateControl(packet):
+	SESSION.updateData("CLIMATE_CONTROL_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
 
 def d_togglePause(packet):
 	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
