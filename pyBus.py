@@ -39,7 +39,7 @@ def configureLogging(numeric_level):
   
 def createParser():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbose', action='count', default=20, help='Increases verbosity of logging.')
+  parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
   parser.add_argument('--device', action='store', help='Path to iBus interface.')
   parser.add_argument('--with-bt', action='store', help='Bluetooth address of media device.')
   parser.add_argument('--with-zmq', action='store', help='ZMQ port to listen on.')
