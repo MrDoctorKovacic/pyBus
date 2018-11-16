@@ -140,11 +140,11 @@ def init(writer, args):
 	# Setup Bluetooth
 	if args.with_bt:
 		import pyBus_bluetooth as pB_bt # For bluetooth audio controls
+		logging.debug("Setting Bluetooth address to {}. Attempting to connect.".format({args.with_bt}))
 
 		# Attempt to connect phone through bluetooth, 
 		# Non-blocking, do before waiting on clear ibus
-		pB_bt.PHONE = args.with_bt
-		pB_bt.connect()
+		pB_bt.connect(args.with_bt)
 		pB_bt.playDelayed()
 
 	# Setup ZMQ

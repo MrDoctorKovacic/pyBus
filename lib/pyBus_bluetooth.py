@@ -14,6 +14,8 @@ PHONE = None
 
 # Connect a bluetooth device, typically run at startup
 def connect(macAddr=PHONE):
+	global PHONE
+	PHONE = macAddr
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 								"/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"], runInBackground=True)
 	_runSubprocess(["/usr/local/bin/a2dp-agent"], runInBackground=True)
