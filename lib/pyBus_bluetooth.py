@@ -72,8 +72,7 @@ def _runSubprocess(command, runInBackground=False):
 			out, err = process.communicate()
 			return [_parseDBusReply(out), _parseDBusReply(err)]
 	except Exception, e:
-		logging.error("ERROR running dbus command: {}".format(command))
-		logging.error(e)
+		logging.error("Failed to run the following process: {}\nRaised: {}".format(command, e))
 		return False
 
 # Parse the formatting of the dbus return value into JSON

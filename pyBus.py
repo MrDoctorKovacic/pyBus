@@ -15,7 +15,7 @@ import pyBus_core as core
 #####################################
 # Manage Ctrl+C gracefully
 def signal_handler_quit(signal, frame):
-  logging.info("Shutting down pyBus")
+  logging.info("Shutting down pyBus.")
   core.shutdown()
   sys.exit(0)
 
@@ -69,8 +69,7 @@ try:
   core.initialize(args)
   core.run()
 except Exception:
-  logging.error("Caught unexpected exception:")
-  logging.error(traceback.format_exc())
+  logging.error("Caught unexpected exception:\n{}".format(traceback.format_exc()))
 
 logging.critical("And I'm dead.")    
 sys.exit(0)

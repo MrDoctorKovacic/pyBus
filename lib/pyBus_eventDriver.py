@@ -246,7 +246,7 @@ def shutDown():
 	if LISTEN_FOR_EXTERNAL_COMMANDS:
 		SESSION.close()
 
-	logging.info("Killing tick utility")
+	logging.info("Killing tick utility.")
 	pB_ticker.shutDown()
 
 ############################################################################
@@ -336,8 +336,7 @@ def d_windowDoorMessage(packet):
 	pass
 
 def d_togglePause(packet):
-	if pB_bt:
-		logging.debug(pB_bt.togglePause())
+	if pB_bt: logging.debug(pB_bt.togglePause())
 
 def d_cdNext(packet):
 	pass
@@ -346,12 +345,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	if pB_bt:
-		pB_bt.nextTrack()
+	if pB_bt: pB_bt.nextTrack()
 
 def d_steeringPrev(packet):
-	if pB_bt:
-		pB_bt.prevTrack()
+	if pB_bt: pB_bt.prevTrack()
 
 def d_steeringSpeak(packet):
 	toggleModeButton()

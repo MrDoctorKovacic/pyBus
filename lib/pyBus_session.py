@@ -8,10 +8,10 @@
 # TODO: PUBLISH / SUBSCRIBE SETUPS
 ############################################################################
 
-import json
 import datetime
 import logging
 
+json = None
 zmq = None
 MySQLdb = None
 
@@ -19,7 +19,7 @@ class ibusSession():
 
 	# Define Session File path and Session Socket (ZMQ) port #, False to disable
 	def __init__(self, init_session_file=False, init_session_socket=False, init_session_mysql=False):
-		global zmq, MySQLdb
+		global json, zmq, MySQLdb
 
 		# Empty dict for storing key:value pairs of log data
 		#
@@ -31,9 +31,13 @@ class ibusSession():
 
 		# Open file for writing session data
 		if init_session_file:
-			self.updateData("SESSION", True)
-			self.write_to_file = True
-			self.filename = init_session_file
+			import json, os
+			if os.access(init_session_file, os.W_OK):
+				self.updateData("SESSION", True)
+				self.write_to_file = True
+				self.filename = init_session_file
+			else:
+				logging.error("Session file {} is not writable, not enabling session IO.")
 
 		# Start ZMQ socket for messaging
 		if init_session_socket:
@@ -42,7 +46,7 @@ class ibusSession():
 			self.socket = self.context.socket(zmq.REP)
 			zmq_address = "tcp://127.0.0.1:{}".format(init_session_socket)
 			self.socket.bind(zmq_address) 
-			logging.info("Started ZMQ Socket at {}".format(zmq_address))
+			logging.info("Started ZMQ Socket at {}.".format(zmq_address))
 
 		# Start MySQL logging
 		if init_session_mysql:
@@ -67,9 +71,13 @@ class ibusSession():
 	def read(self, session_file):
 		pass
 
-	# Write to file, if applicable
+	# Write to file, should only called if started with init_session_file
 	def write(self):
 		try: 
+			if not self.write_to_file:
+				logging.error("Something tried writing without a valid file. This shouldn't have happened.")
+				return False
+
 			# Open file for writing session data
 			session_file = open(self.filename, "w")
 			session_file.write(json.dumps(self.data))
@@ -79,8 +87,8 @@ class ibusSession():
 			self.modified = False
 
 		except Exception, e:
-			logging.error("ERROR writing session to server file: [{}]".format(e))
-			logging.info("Turning off session file writes")
+			logging.error("Failed to write session to file: [{}]".format(e))
+			logging.error("Turning off session file writes.")
 			self.write_to_file = False
 
 	# Allows for easier logging of update timing
@@ -107,7 +115,7 @@ class ibusSession():
 					(now, key, data))
 				self.db.commit()
 			except Exception, e:
-				logging.error("ERROR writing mysql entry: [{}]".format(e))
+				logging.error("Failed to write MySQL entry: [{}]".format(e))
 
 		# Mark as modified, session change should be written
 		self.modified = True
@@ -125,15 +133,15 @@ class ibusSession():
 		except zmq.Again:
 			return None
 		except zmq.ZMQError, e:
-			logging.error("ERROR when checking for external messages: [{}]".format(e))
+			logging.error("Checking for external messages failed: [{}]".format(e))
 
 	# Shutdown, cleanup where necessary
 	def close(self):
-		logging.info("Closing pyBus Session")
+		logging.info("Closing pyBus Session.")
 
 		# One last write for posterity
 		self.write()
 
-		logging.info("Destroying ZMQ socket")
+		logging.info("Destroying ZMQ socket.")
 		self.socket.close()
 		self.context.destroy()
