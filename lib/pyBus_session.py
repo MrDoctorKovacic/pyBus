@@ -11,32 +11,57 @@
 import json
 import datetime
 import logging
-import zmq
+
+zmq = None
+MySQLdb = None
 
 class ibusSession():
 
 	# Define Session File path and Session Socket (ZMQ) port #, False to disable
-	def __init__(self, init_session_file=False, init_session_socket=False):
+	def __init__(self, init_session_file=False, init_session_socket=False, init_session_mysql=False):
+		global zmq, MySQLdb
 
 		# Empty dict for storing key:value pairs of log data
 		#
 		# TODO: Attempt to load from previous file to init with
 		#
 		self.data = {}
+		self.modified = True
+		self.db = None
 
 		# Open file for writing session data
-		if(init_session_file):
+		if init_session_file:
 			self.updateData("SESSION", True)
 			self.write_to_file = True
 			self.filename = init_session_file
 
 		# Start ZMQ socket for messaging
-		if(init_session_socket):
+		if init_session_socket:
+			import zmq
 			self.context = zmq.Context()
 			self.socket = self.context.socket(zmq.REP)
 			zmq_address = "tcp://127.0.0.1:{}".format(init_session_socket)
 			self.socket.bind(zmq_address) 
 			logging.info("Started ZMQ Socket at {}".format(zmq_address))
+
+		# Start MySQL logging
+		if init_session_mysql:
+			import MySQLdb
+			self.db = MySQLdb.connect("localhost", init_session_mysql[0], init_session_mysql[1], init_session_mysql[2])
+			self.curs = self.db.cursor()
+
+			# Check if table exists
+			self.curs.execute("SHOW TABLES")
+			texists = False
+			for table in self.curs:
+				if table == "log_serial":
+					texists = True
+					break
+			
+			# Create table if not exist
+			if not texists:
+				self.curs.execute("CREATE TABLE log_serial (id INT AUTO_INCREMENT PRIMARY KEY, timestamp DATETIME, entry VARCHAR(255), value VARCHAR(255))")
+				self.db.commit()
 
 	# Read from previous session file
 	def read(self, session_file):
@@ -49,9 +74,13 @@ class ibusSession():
 			session_file = open(self.filename, "w")
 			session_file.write(json.dumps(self.data))
 			session_file.close()
+
+			# Mark as unmodified since last write
+			self.modified = False
+
 		except Exception, e:
-			logging.error("Encountered error when writing session to server file: [{}]".format(e))
-			logging.debug("Turning off session file writes")
+			logging.error("ERROR writing session to server file: [{}]".format(e))
+			logging.info("Turning off session file writes")
 			self.write_to_file = False
 
 	# Allows for easier logging of update timing
@@ -69,29 +98,42 @@ class ibusSession():
 			self.data["UPDATED_TIME"][key] = None
 
 		self.data["UPDATED_TIME"][key] = now
+
+		# Write entry to massive DB table
+		if self.db:
+			try:
+				self.curs.execute("""INSERT INTO log_serial
+					(timestamp, entry, value) values  (%s, %s, %s) """, 
+					(now, key, data))
+				self.db.commit()
+			except Exception, e:
+				logging.error("ERROR writing mysql entry: [{}]".format(e))
+
+		# Mark as modified, session change should be written
+		self.modified = True
 		
 	# Checks for any external messages sent to socket,
 	def checkExternalMessages(self):
 
-		# Non-blocking, as to not interrupt parsing ibus messages. We just queue messages instead
+		# Non-blocking, to not interrupt parsing ibus messages. We just queue messages instead
 		try:
 			message = self.socket.recv(zmq.NOBLOCK)
-			logging.debug("Got External Message: {}".format(message))
+			logging.info("Got External Message: {}".format(message))
 			return message
 
 		# IF no messages are queued
 		except zmq.Again:
 			return None
 		except zmq.ZMQError, e:
-			logging.error("Unexpected error when checking for external messages: [{}]".format(e))
+			logging.error("ERROR when checking for external messages: [{}]".format(e))
 
 	# Shutdown, cleanup where necessary
 	def close(self):
-		logging.debug("Closing pyBus Session")
+		logging.info("Closing pyBus Session")
 
 		# One last write for posterity
 		self.write()
 
-		logging.debug("Destroying ZMQ socket")
+		logging.info("Destroying ZMQ socket")
 		self.socket.close()
 		self.context.destroy()
