@@ -125,13 +125,14 @@ SESSION_FILE = None
 LISTEN_FOR_EXTERNAL_COMMANDS = False
 LISTEN_PORT = None
 MYSQL_CRED = None
+MEDIA_PLAYER = None
 
 #####################################
 # FUNCTIONS
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED
+	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER
 
 	#
 	# Parse sys arguments to set up optional data loging modules
@@ -141,11 +142,12 @@ def init(writer, args):
 	if args.with_bt:
 		import pyBus_bluetooth as pB_bt # For bluetooth audio controls
 		logging.debug("Setting Bluetooth address to {}. Attempting to connect.".format({args.with_bt}))
+		MEDIA_PLAYER = args.with_bt
 
 		# Attempt to connect phone through bluetooth, 
 		# Non-blocking, do before waiting on clear ibus
-		pB_bt.connect(args.with_bt[0])
-		pB_bt.playDelayed()
+		pB_bt.connect(MEDIA_PLAYER)
+		pB_bt.playDelayed(MEDIA_PLAYER)
 
 	# Setup ZMQ
 	if args.with_zmq:
@@ -336,7 +338,7 @@ def d_windowDoorMessage(packet):
 	pass
 
 def d_togglePause(packet):
-	if pB_bt: logging.debug(pB_bt.togglePause())
+	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
 
 def d_cdNext(packet):
 	pass
@@ -345,10 +347,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	if pB_bt: pB_bt.nextTrack()
+	if pB_bt: pB_bt.nextTrack(MEDIA_PLAYER)
 
 def d_steeringPrev(packet):
-	if pB_bt: pB_bt.prevTrack()
+	if pB_bt: pB_bt.prevTrack(MEDIA_PLAYER)
 
 def d_steeringSpeak(packet):
 	toggleModeButton()
