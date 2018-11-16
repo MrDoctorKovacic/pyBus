@@ -357,7 +357,7 @@ def d_steeringSpeakLong(packet):
 	pass
 
 ############################################################################
-# DIRECTIVE UTILITY FUNCTIONS
+# UTILITY FUNCTIONS
 # THESE ARE USED FOR INTERNAL OR EXTERNAL DIRECTIVES, 
 # OFTEN COMBINING SEVERAL IBUS WRITES INTO ONE FUNCTION
 #
