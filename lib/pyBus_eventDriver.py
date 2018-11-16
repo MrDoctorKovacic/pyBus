@@ -15,7 +15,6 @@ import pyBus_session as pB_session # Session object for writing and sending log 
 
 # Optional modules to be imported conditionally
 pB_bt = None
-pB_mysql = None
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
@@ -132,8 +131,7 @@ MYSQL_CRED = None
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global pB_bt, pB_session
-	global WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED
+	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED
 
 	#
 	# Parse sys arguments to set up optional data loging modules
