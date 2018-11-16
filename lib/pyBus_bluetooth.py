@@ -11,38 +11,46 @@ import subprocess
 PHONE = None
 
 #####################################
-# TODO : Error handling, esp for sockets
-#        All BT media controls should check return of dbus for failures
-#
 
 # Connect a bluetooth device, typically run at startup
 def connect(macAddr=PHONE):
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 								"/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"], runInBackground=True)
 	_runSubprocess(["/usr/local/bin/a2dp-agent"], runInBackground=True)
+	if error:
+		logging.error("Error when running connect dbus command: {}".format(error))
 	return out
 
 # Will attempt to skip current Track
 def getMediaInfo(macAddr=PHONE):
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(
 		macAddr.replace(':', '_')), "org.freedesktop.DBus.Properties.Get", "string:org.bluez.MediaPlayer1", "string:Track"])
+	if error:
+		logging.error("Error when running getMediaInfo dbus command: {}".format(error))
 	return out
-
 
 def getDeviceInfo(macAddr=PHONE):
 	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez", "/org/bluez/hci0/dev_{}/player0".format(
 		macAddr.replace(':', '_')), "org.freedesktop.DBus.Properties.Get", "string:org.bluez.MediaPlayer1", "string:Status"])
+	if error:
+		logging.error("Error when running getDeviceInfo dbus command: {}".format(error))
 	return out
 
 # Will attempt to skip current Track
 def nextTrack(macAddr=PHONE):
-	_runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 				   "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Next"])
+	if error:
+		logging.error("Error when running nextTrack dbus command: {}".format(error))
+	return out
 
 # Will attempt to skip Track backwards
 def prevTrack(macAddr=PHONE):
-	_runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 				   "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Previous"])
+	if error:
+		logging.error("Error when running prevTrack dbus command: {}".format(error))
+	return out
 
 # Checks for current pause / play status and toggles it
 def togglePause(macAddr=PHONE):
@@ -50,13 +58,19 @@ def togglePause(macAddr=PHONE):
 
 # Will attempt to pause playing media
 def pause(macAddr=PHONE):
-	_runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+	out, error = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 				   "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Pause"])
+	if error:
+		logging.error("Error when running pause dbus command: {}".format(error))
+	return out
 
 # Will attempt to play media
 def play(macAddr=PHONE):
-	_runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
+	out, error= _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
 				   "/org/bluez/hci0/dev_{}/player0".format(macAddr.replace(':', '_')), "org.bluez.MediaPlayer1.Play"])
+	if error:
+		logging.error("Error when running play dbus command: {}".format(error))
+	return out
 
 # Will attempt to play media after a short delay
 def playDelayed(macAddr=PHONE):
