@@ -26,7 +26,7 @@ IBUS              = None
 # FUNCTIONS
 
 # Initializes modules as required and opens files for writing
-def initialize():
+def initialize(args):
   global IBUS, DEVPATH
   
   # Initialize the iBus interface or wait for it to become available.
@@ -38,7 +38,7 @@ def initialize():
       time.sleep(2)
   IBUS.waitClearBus() # Wait for the iBus to clear, then send some initialization signals
   
-  pB_eDriver.init(IBUS)
+  pB_eDriver.init(IBUS, args)
   
 # close the USB device and whatever else is required
 def shutdown():
