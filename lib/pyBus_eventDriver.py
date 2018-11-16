@@ -108,6 +108,11 @@ DIRECTIVES = {
 			'3100000B' : None, # Mode button pressed
 			'3100134B' : None, # Mode button released
 		}
+	},
+	'E8' : {
+		'D0' : {
+			'ALL' : 'd_rainLightSensor'
+		}
 	}
 }
 
@@ -336,6 +341,9 @@ def d_custom_IKE(packet):
 # Handles messages sent when door/window status changes
 def d_windowDoorMessage(packet):
 	pass
+
+def d_rainLightSensor(packet):
+	SESSION.updateData("RAIN_SENSOR_STATUS", (packet['dat'][0]+packet['dat'][1]+packet['dat'][2]))
 
 def d_togglePause(packet):
 	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
