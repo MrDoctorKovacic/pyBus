@@ -60,7 +60,7 @@ class ibusSession():
 			texists = False
 			for table in self.curs:
 				logging.debug(table)
-				if table == "log_serial":
+				if "log_serial" in table:
 					texists = True
 					break
 			
