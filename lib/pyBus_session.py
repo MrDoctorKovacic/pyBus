@@ -111,6 +111,7 @@ class ibusSession():
 		# Write entry to massive DB table
 		if self.db:
 			try:
+				logging.debug("Writing {}:{} to MySQL table".format(key, data))
 				self.curs.execute("""INSERT INTO log_serial
 					(timestamp, entry, value) values  (%s, %s, %s) """, 
 					(now, key, data))
