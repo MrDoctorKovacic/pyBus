@@ -19,7 +19,7 @@ def connect(macAddr=PHONE):
 	logging.debug("Connecting bluetooth media address {}.".format(macAddr))
 
 	out = _runSubprocess(["dbus-send", "--system", "--print-reply", "--type=method_call", "--dest=org.bluez",
-								"/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"], runInBackground=True)
+								"/org/bluez/hci0/dev_{}".format(macAddr.replace(':', '_')), "org.bluez.Device1.Connect"])
 	_runSubprocess(["/usr/local/bin/a2dp-agent"], runInBackground=True)
 
 	return out
