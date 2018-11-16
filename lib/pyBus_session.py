@@ -52,21 +52,24 @@ class ibusSession():
 		# Start MySQL logging
 		if init_session_mysql:
 			import MySQLdb
-			self.db = MySQLdb.connect("localhost", init_session_mysql[0], init_session_mysql[1], init_session_mysql[2])
-			self.curs = self.db.cursor()
+			try:
+				self.db = MySQLdb.connect("localhost", init_session_mysql[0], init_session_mysql[1], init_session_mysql[2])
+				self.curs = self.db.cursor()
 
-			# Check if table exists
-			self.curs.execute("SHOW TABLES")
-			texists = False
-			for table in self.curs:
-				if "log_serial" in table:
-					texists = True
-					break
-			
-			# Create table if not exist
-			if not texists:
-				self.curs.execute("CREATE TABLE log_serial (id INT AUTO_INCREMENT PRIMARY KEY, timestamp DATETIME, entry VARCHAR(255), value VARCHAR(255))")
-				self.db.commit()
+				# Check if table exists
+				self.curs.execute("SHOW TABLES")
+				texists = False
+				for table in self.curs:
+					if "log_serial" in table:
+						texists = True
+						break
+				
+				# Create table if not exist
+				if not texists:
+					self.curs.execute("CREATE TABLE log_serial (id INT AUTO_INCREMENT PRIMARY KEY, timestamp DATETIME, entry VARCHAR(255), value VARCHAR(255))")
+					self.db.commit()
+			except Exception, e:
+				logging.error("Unknown exception when starting MySQL logging.\n{}".format(e))
 
 	# Read from previous session file
 	def read(self, session_file):
