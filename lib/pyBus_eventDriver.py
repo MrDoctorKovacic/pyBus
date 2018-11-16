@@ -189,12 +189,6 @@ def init(writer, args):
 	# Start PyBus logging Session
 	SESSION = pB_session.ibusSession(SESSION_FILE, LISTEN_PORT, MYSQL_CRED)
 
-	# Init default session data
-	SESSION.updateData("DOOR_LOCKED", False)
-	SESSION.updateData("POWER_STATE", False)
-	SESSION.updateData("SPEED", 0)
-	SESSION.updateData("RPM", 0)
-
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
 
