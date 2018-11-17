@@ -271,6 +271,8 @@ def shutDown():
 ############################################################################
 def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
+	SESSION.updateData("RPM", 0)
+	SESSION.updateData("SPEED", 0)
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
