@@ -71,7 +71,7 @@ DIRECTIVES = {
 		},
 		'C8' : {
 			'01' : None, # This can happen via RT button or ignition
-			'019A' : None, # RT Button
+			'019A' : 'restartBoard', # RT Button
 			'3B40' : None, # reset
 			'3B80' : 'd_steeringSpeak', # Dial button
 			'3B90' : 'd_steeringSpeakLong', # Dial button, long press
@@ -387,6 +387,11 @@ def d_steeringSpeakLong(packet):
 #
 # TYPICALLY DIRECTIVES ARE REACTIVE, THESE UTLITIES ARE ACTIVE
 ############################################################################
+
+# Restarts the SBC this is running on
+def restartBoard():
+	shutDown()
+	os.system('reboot now')
 
 # Emulates pressing the "MODE" button on radio
 def toggleModeButton():
