@@ -126,7 +126,7 @@ DIRECTIVES = {
 #####################################
 # CONFIG
 #####################################
-TICK = 0.02 # sleep interval in seconds used between iBUS reads
+TICK = 0.04 # sleep interval in seconds used between iBUS reads
 
 #####################################
 # Define Globals
@@ -138,13 +138,14 @@ LISTEN_FOR_EXTERNAL_COMMANDS = False
 LISTEN_PORT = None
 MYSQL_CRED = None
 MEDIA_PLAYER = None
+EXTERNAL_JSON = None
 
 #####################################
 # FUNCTIONS
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER
+	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER, EXTERNAL_JSON
 
 	#
 	# Parse sys arguments to set up optional data loging modules
@@ -169,9 +170,15 @@ def init(writer, args):
 
 	# Setup Session IO
 	if args.with_session:
-		# Session object for writing and sending log info abroad
+		# Session file, stored onto disk
 		SESSION_FILE = args.with_session
-		LISTEN_PORT = args.with_zmq
+
+	# Setup External JSON
+	if args.with_ext_session:
+		# Parse each external JSON location, along with fetch frequency
+		for external_location in args.with_ext_session:
+			logging.info(external_location)
+		EXTERNAL_JSON = args.with_ext_session
 
 	# Setup MySQL
 	if args.with_mysql:
@@ -187,7 +194,7 @@ def init(writer, args):
 	pB_ticker.init(WRITER)
 
 	# Start PyBus logging Session
-	SESSION = pB_session.ibusSession(SESSION_FILE, LISTEN_PORT, MYSQL_CRED)
+	SESSION = pB_session.ibusSession(SESSION_FILE, LISTEN_PORT, MYSQL_CRED, EXTERNAL_JSON)
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -244,6 +251,22 @@ def listen():
 			message = SESSION.checkExternalMessages()
 			if message:
 				manageExternalMessages(message)
+
+		# Check external JSON sessions
+		# This will end up happening at every well defined interval going forward
+		if EXTERNAL_JSON:
+			for ext in SESSION.external_locations:
+				if ext.timeToFetch <= 0:
+					try:
+						ext_json_array = json.loads(ext.fetch())
+						for obj in ext_json_array:
+							SESSION.updateData(obj, ext_json_array[obj])
+					except Exception, e:
+						logging.error("Failed to load JSON into live session.")
+						logging.error(e)
+					ext.timeToFetch = ext.interval
+				else:
+					ext.timeToFetch -= TICK
 
 		# Write all this to a file
 		if SESSION and SESSION.write_to_file and SESSION.modified:

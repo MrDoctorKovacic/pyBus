@@ -10,15 +10,27 @@
 
 import datetime
 import logging
+import urllib2
 
 json = None
 zmq = None
 MySQLdb = None
 
+class ibusExternalSession():
+	# Handler for external sessions, including fetching and timing
+	def __init__(self, location, interval):
+		self.location = location
+		self.interval = interval
+		self.timeToFetch = 0
+
+	# Will attempt to fetch
+	def fetch(self):
+		return urllib2.urlopen(self.location).read()
+
 class ibusSession():
 
 	# Define Session File path and Session Socket (ZMQ) port #, False to disable
-	def __init__(self, init_session_file=False, init_session_socket=False, init_session_mysql=False):
+	def __init__(self, init_session_file=False, init_session_socket=False, init_session_mysql=False, init_external_sessions = False):
 		global json, zmq, MySQLdb
 
 		# Empty dict for storing key:value pairs of log data
@@ -48,6 +60,13 @@ class ibusSession():
 			zmq_address = "tcp://127.0.0.1:{}".format(init_session_socket)
 			self.socket.bind(zmq_address) 
 			logging.info("Started ZMQ Socket at {}.".format(zmq_address))
+
+		# Setup fetch timers to append external JSON session data
+		if init_external_sessions:
+			self.external_locations = []
+			for extern in init_external_sessions:
+				for location, interval in extern:
+					self.external_locations.append(ibusExternalSession(location, interval))
 
 		# Start MySQL logging
 		if init_session_mysql:
