@@ -432,6 +432,7 @@ def restartBoard():
 # Emulates pressing the "MODE" button on radio
 def toggleModeButton():
 	WRITER.writeBusPacket('F0', '68', ['48', '23'])
+	WRITER.writeBusPacket('F0', '68', ['48', 'A3'])
 	#WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
 	#WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
 
