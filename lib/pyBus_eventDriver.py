@@ -76,6 +76,9 @@ DIRECTIVES = {
 			'3B80' : 'd_steeringSpeak', # Dial button
 			'3B90' : 'd_steeringSpeakLong', # Dial button, long press
 			'3BA0' : None # Dial button, released
+		},
+		'FF' : {
+			'3B40' : 'd_steeringRT' # also RT Button?
 		}
 	},
 	'5B' : {
@@ -296,9 +299,11 @@ def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
+	if pB_bt: pB_bt.pause()
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
+	if pB_bt: pB_bt.play()
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
@@ -397,6 +402,9 @@ def d_steeringNext(packet):
 def d_steeringPrev(packet):
 	if pB_bt: pB_bt.prevTrack(MEDIA_PLAYER)
 
+def d_steeringRT(packet):
+	toggleModeButton()
+
 def d_steeringSpeak(packet):
 	toggleModeButton()
 
@@ -418,8 +426,9 @@ def restartBoard():
 
 # Emulates pressing the "MODE" button on radio
 def toggleModeButton():
-	WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
-	WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
+	WRITER.writeBusPacket('F0', '68', ['48', 'A3'])
+	#WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
+	#WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
 
 # VERY loud, careful
 def turnOnAlarm():
