@@ -490,17 +490,17 @@ def pressStereoPower():
 def turnOnAlarm():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '55'])
 
-# NW
+# Not Working, but seen in logs
 # Turns on flashers, including interior light
 def turnOnFlashers():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '5B'])
 
-# NW
+# Not Working, but seen in logs
 # Turns on hazards, including interior light
 def turnOnHazards():
 	WRITER.writeBusPacket('3F', '00', ['0C', '70', '01'])
 
-# NW
+# Not Working, but seen in logs
 # Slowly dim interior lights
 def interiorLightsOff():
 	WRITER.writeBusPacket('3F', '00', ['0C', '00', '59'])
@@ -534,7 +534,7 @@ def rollWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
 	SESSION.updateData("WINDOWS_STATUS", "DOWN")
 
-# NW
+# Not Working, but seen in logs
 # Pops up windows "a piece"
 def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Pop up window 1
@@ -543,7 +543,7 @@ def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
 	SESSION.updateData("WINDOWS_STATUS", "UP") # this may not be 100% true
 
-# NW
+# Not Working, but seen in logs
 # Pops down windows "a piece"
 def popWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Pop down window 1
