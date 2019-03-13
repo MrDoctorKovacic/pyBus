@@ -408,10 +408,10 @@ def d_steeringPrev(packet):
 	if pB_bt: pB_bt.prevTrack(MEDIA_PLAYER)
 
 def d_steeringRT(packet):
-	toggleModeButton()
+	pressMode()
 
 def d_steeringSpeak(packet):
-	toggleModeButton()
+	pressMode()
 
 def d_steeringSpeakLong(packet):
 	pass
@@ -429,12 +429,62 @@ def restartBoard():
 	shutDown()
 	os.system('reboot now')
 
-# Emulates pressing the "MODE" button on radio
-def toggleModeButton():
-	WRITER.writeBusPacket('F0', '68', ['48', '23'])
-	WRITER.writeBusPacket('F0', '68', ['48', 'A3'])
-	#WRITER.writeBusPacket('C0', '68', ['31', '00', '00', '0B', '94']) # press
-	#WRITER.writeBusPacket('C0', '68', ['01', '00', '13', '4B', 'C7']) # release
+# Emulates pressing the "MODE" button on stereo
+# Very useful for changing back to AUX input without using the stock radio
+def pressMode():
+	# If you're switching to radio, 
+	# prepare to be spammed with Radio station song/artist/location/signal strength packets.
+	# This will probably freeze the WRITER for 10+ seconds
+	WRITER.writeBusPacket('F0', '68', ['48', '23']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', 'A3']) # release
+
+# Press number pad, 1-6
+# On radio this will switch to that assigned station
+# On aux this will adjust the gain
+def pressNumPad(number=6):
+	if(number == 1):
+		WRITER.writeBusPacket('F0', '68', ['48', '11']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '91']) # release
+	elif(number == 2):
+		WRITER.writeBusPacket('F0', '68', ['48', '01']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '81']) # release
+	elif(number == 3):
+		WRITER.writeBusPacket('F0', '68', ['48', '12']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '92']) # release
+	elif(number == 4):
+		WRITER.writeBusPacket('F0', '68', ['48', '02']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '82']) # release
+	elif(number == 5):
+		WRITER.writeBusPacket('F0', '68', ['48', '13']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '93']) # release
+	elif(number == 6):
+		WRITER.writeBusPacket('F0', '68', ['48', '03']) # push
+		WRITER.writeBusPacket('F0', '68', ['48', '83']) # release
+
+# This switches to AM, I forget what pressing twice does
+def pressAM():
+	WRITER.writeBusPacket('F0', '68', ['48', '21']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', 'A1']) # release
+
+# This switches to FM, I forget what pressing twice does
+def pressFM():
+	WRITER.writeBusPacket('F0', '68', ['48', '31']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', 'B1']) # release
+
+# Presses next button on Radio, changing stations or songs
+def pressNext():
+	WRITER.writeBusPacket('F0', '68', ['48', '00']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', '80']) # release
+
+# Presses prev button on Radio, changing stations or songs
+def pressPrev():
+	WRITER.writeBusPacket('F0', '68', ['48', '10']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', '90']) # release
+
+# Presses on the left dial, turning stereo on & off
+def pressStereoPower():
+	WRITER.writeBusPacket('F0', '68', ['48', '06']) # push
+	WRITER.writeBusPacket('F0', '68', ['48', '86']) # release
 
 # VERY loud, careful
 def turnOnAlarm():
