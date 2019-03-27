@@ -13,9 +13,6 @@ import datetime
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
 
-# Optional modules to be imported conditionally
-pB_bt = None
-
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
 # The packet is checked by matching the source value in packet (i.e. where the packet came from) to a key in the object if possible
 # Then matching the Destination if possible
@@ -158,17 +155,6 @@ def init(writer, args):
 	#
 	# Parse sys arguments to set up optional data loging modules
 	#
-
-	# Setup Bluetooth
-	if args.with_bt:
-		import pyBus_bluetooth as pB_bt # For bluetooth audio controls
-		logging.debug("Setting Bluetooth address to {}. Attempting to connect.".format({args.with_bt}))
-		MEDIA_PLAYER = args.with_bt
-
-		# Attempt to connect phone through bluetooth, 
-		# Non-blocking, do before waiting on clear ibus
-		pB_bt.connect(MEDIA_PLAYER)
-		pB_bt.playDelayed(MEDIA_PLAYER)
 
 	# Setup ZMQ
 	if args.with_zmq:
@@ -591,7 +577,7 @@ def manageExternalMessages(message):
 	message_array = json.loads(message)
 	logging.debug(message_array)
 
-	# Directive / Bluetooth command verbatim
+	# Directive command verbatim
 	if "directive" in message_array:
 		try:
 			# Messy, but calls a directive given the chance

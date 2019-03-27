@@ -41,7 +41,6 @@ def createParser():
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
   parser.add_argument('--device', action='store', required=True, help='Path to iBus interface.')
-  parser.add_argument('--with-bt', action='store', help='Bluetooth address of media device.')
   parser.add_argument('--with-zmq', action='store', help='ZMQ port to listen on.')
   parser.add_argument('--with-session', action='store', help='File to output momentary session.')
   parser.add_argument('--with-ext-session', action='append', nargs=2, help='Location, typically a URL, of external JSON formatted session data. Specify int value to define time inbetween fetching resources.')
