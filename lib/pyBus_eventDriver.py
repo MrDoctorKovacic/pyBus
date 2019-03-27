@@ -9,6 +9,7 @@ import random
 import logging
 import traceback
 import datetime
+import urllib2 as url
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
@@ -150,7 +151,7 @@ EXTERNAL_JSON = None
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global pB_bt, WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER, EXTERNAL_JSON
+	global WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER, EXTERNAL_JSON
 
 	#
 	# Parse sys arguments to set up optional data loging modules
@@ -290,11 +291,11 @@ def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
-	if pB_bt: pB_bt.pause()
+	logging.debug(url.urlopen("http://localhost:5353/bluetooth/pause").read())
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
-	if pB_bt: pB_bt.play()
+	logging.debug(url.urlopen("http://localhost:5353/bluetooth/play").read())
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
@@ -379,7 +380,7 @@ def d_diagnostic(packet):
 	SESSION.updateData("DIAGNOSTIC", (''.join(packet['dat'])))
 
 def d_togglePause(packet):
-	if pB_bt: logging.debug(pB_bt.togglePause(MEDIA_PLAYER))
+	logging.debug(url.urlopen("http://localhost:5353/bluetooth/pause").read())
 
 def d_cdNext(packet):
 	pass
@@ -388,10 +389,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	if pB_bt: pB_bt.nextTrack(MEDIA_PLAYER)
+	logging.debug(url.urlopen("http://localhost:5353/bluetooth/next").read())
 
 def d_steeringPrev(packet):
-	if pB_bt: pB_bt.prevTrack(MEDIA_PLAYER)
+	logging.debug(url.urlopen("http://localhost:5353/bluetooth/prev").read())
 
 def d_steeringRT(packet):
 	pressMode()
