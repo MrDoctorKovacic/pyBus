@@ -2,31 +2,27 @@ pyBus
 =====
 ### Forked from ezeakeal's excellent [pyBus](https://github.com/ezeakeal/pyBus)
 
-iBus interface for my E46 BMW written in Python. I'm using it for a backend to a Nexus 7 install, if you want more of a factory integration I recommend one of the other forks. 
-This is to be used with the USB interface which can be acquired from [Reslers.de](http://www.reslers.de/IBUS/). Other USB interfaces should work just as well, although are untested. 
+I-BUS interface for my E46 BMW written in Python 2.7. BMW's I-BUS (DE: K-BUS) is a proprietary serial communication line similar to CAN, but used primarily for exchanges between "non-essential" modules like A/C or radio. [Here's a great writeup.](https://curious.ninja/blog/arduino-bmw-i-bus-interface-technical-details/) 
 
 ## Overview
-* Interfaces with the BMW iBus to send and receive button presses, status changes, vehicle info, etc. 
-* Records the car's state and keeps a running log that can be saved to disk and MySQL. 
-* Can map steering wheel controls to a paired Bluetooth media player. 
-* Can listen for external requests for functions to be run. (Unlocking the car from your phone, for example) 
-
+* USB serial interface can be acquired from [Reslers.de](http://www.reslers.de/IBUS/). Other USB interfaces should work just as well, although are untested. 
+* Communicates on the I-BUS to send and receive diagnostics, running status, button presses, vehicle info, etc. 
+* Can map steering wheel controls to various functions. 
+* Can listen for and subsequently run external directives/utilities. (Unlocking the car from your phone, for example) 
 ### Warning
-All software is in early alpha stages! K/I-Bus issues can be painful to diagnose and fix, so please don't use this to mess up your car. Each E46 sends different bus packets depending on the car's year and configuration. This likely won't be plug & play.
+K/I-BUS issues can be difficult to diagnose and fix, so please don't use this to mess up your car. Each E46 sends different bus packets depending on the car's year and configuration. This likely won't be plug & play.
 
 ## Pre-Requisites
 * python & python-setuptools 
 	* `sudo apt-get install python python-setuptools`
-* pyserial 
-	* `pip install pyserial` 
+* pyserial & requests
+	* `pip install pyserial requests` 
 
 ## Optional Features
-* **Bluetooth:** Send the car's steering wheel controls to a paired device. 
-	* `sudo apt-get bluetooth bluez python-bluez` 
+*Note: this branch has been slashed of features. I wanted to avoid a one-size-fits-all program since growing requirements will make this unwieldy. This is now first and foremost an I-BUS interface.*
 * **ZeroMQ:** Listen on a port for external commands. Opens up a janky REST api. 
 	* https://github.com/MonsieurV/ZeroMQ-RPi 
-* **MySQL:** Enables creating & logging most functions to a MySQL database. 
-	* `sudo apt-get install mysql-server python-mysqldb` 
+* **More Features** including Bluetooth, MySQL logging, and remote files can be found on [an earlier branch](https://github.com/MrDoctorKovacic/pyBus/tree/soylentspaghetti). 
 
 ## Quick Start
 * Install the prerequisites above 

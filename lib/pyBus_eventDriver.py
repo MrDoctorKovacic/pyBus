@@ -9,7 +9,7 @@ import random
 import logging
 import traceback
 import datetime
-import urllib2 as url
+import requests
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
@@ -139,57 +139,32 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 #####################################
 WRITER = None
 SESSION = None
-SESSION_FILE = None
 LISTEN_FOR_EXTERNAL_COMMANDS = False
 LISTEN_PORT = None
-MYSQL_CRED = None
-MEDIA_PLAYER = None
-EXTERNAL_JSON = None
+WITH_API = False
 
 #####################################
 # FUNCTIONS
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global WRITER, SESSION, SESSION_FILE, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT, MYSQL_CRED, MEDIA_PLAYER, EXTERNAL_JSON
+	global WRITER, SESSION, WITH_API, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT
 
-	#
-	# Parse sys arguments to set up optional data loging modules
-	#
-
-	# Setup ZMQ
+	# Setup ZMQ if necc
 	if args.with_zmq:
 		# Session object for writing and sending log info abroad
 		LISTEN_FOR_EXTERNAL_COMMANDS = True
 		LISTEN_PORT = args.with_zmq
 
-	# Setup Session IO
-	if args.with_session:
-		# Session file, stored onto disk
-		SESSION_FILE = args.with_session
-
-	# Setup External JSON
-	if args.with_ext_session:
-		# Parse each external JSON location, along with fetch frequency
-		for external_location in args.with_ext_session:
-			logging.info(external_location)
-		EXTERNAL_JSON = args.with_ext_session
-
-	# Setup MySQL
-	if args.with_mysql:
-		# Session object for writing and sending log info abroad
-		MYSQL_CRED = args.with_mysql
-
-	#
-	# End argument/module parsing
-	#
+	# Determine if we're extending functionality with external GoQMW API
+	WITH_API = args.with_api
 
 	# Start ibus writer
 	WRITER = writer
 	pB_ticker.init(WRITER)
 
 	# Start PyBus logging Session
-	SESSION = pB_session.ibusSession(SESSION_FILE, LISTEN_PORT, MYSQL_CRED, EXTERNAL_JSON)
+	SESSION = pB_session.ibusSession(WITH_API, LISTEN_PORT)
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -247,10 +222,6 @@ def listen():
 			if message:
 				manageExternalMessages(message)
 
-		# Write all this to a file
-		if SESSION and SESSION.write_to_file and SESSION.modified:
-			SESSION.write()
-
 		time.sleep(TICK) # sleep a bit
 
 # Shutdown pyBus
@@ -275,11 +246,11 @@ def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
-	logging.debug(url.urlopen("http://localhost:5353/bluetooth/pause").read())
+	logging.debug(requests.get("http://localhost:5353/bluetooth/pause"))
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
-	logging.debug(url.urlopen("http://localhost:5353/bluetooth/play").read())
+	logging.debug(requests.get("http://localhost:5353/bluetooth/play"))
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
@@ -349,7 +320,7 @@ def d_custom_IKE(packet):
 
 # Handles messages sent when door/window status changes
 def d_windowDoorMessage(packet):
-	pass
+	SESSION.updateData("WINDOR_DOOR_STATUS", (''.join(packet['dat'])))
 
 # Handles Rain/Light sensor data. TODO: find what light/dark is and wet/dry is
 def d_rainLightSensor(packet):
@@ -364,7 +335,7 @@ def d_diagnostic(packet):
 	SESSION.updateData("DIAGNOSTIC", (''.join(packet['dat'])))
 
 def d_togglePause(packet):
-	logging.debug(url.urlopen("http://localhost:5353/bluetooth/pause").read())
+	logging.debug(requests.get("http://localhost:5353/bluetooth/pause"))
 
 def d_cdNext(packet):
 	pass
@@ -373,10 +344,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	logging.debug(url.urlopen("http://localhost:5353/bluetooth/next").read())
+	logging.debug(requests.get("http://localhost:5353/bluetooth/next"))
 
 def d_steeringPrev(packet):
-	logging.debug(url.urlopen("http://localhost:5353/bluetooth/prev").read())
+	logging.debug(requests.get("http://localhost:5353/bluetooth/prev"))
 
 def d_steeringRT(packet):
 	pressMode()
@@ -478,8 +449,6 @@ def interiorLightsOff():
 
 def toggleDoorLocks():
 	WRITER.writeBusPacket('3F','00', ['0C', '03', '01'])
-	SESSION.updateData("DOOR_LOCKED_DRIVER", not SESSION.data["DOOR_LOCKED_DRIVER"])
-	SESSION.updateData("DOOR_LOCKED_PASSENGER", not SESSION.data["DOOR_LOCKED_PASSENGER"])
 
 def lockDoors():
 	WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
@@ -495,7 +464,6 @@ def rollWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
-	SESSION.updateData("WINDOWS_STATUS", "UP")
 
 # Roll all 4 windows down
 def rollWindowsDown():
@@ -503,7 +471,6 @@ def rollWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Put down window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Put down window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
-	SESSION.updateData("WINDOWS_STATUS", "DOWN")
 
 # Not Working, but seen in logs
 # Pops up windows "a piece"
@@ -512,7 +479,6 @@ def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Pop up window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Pop up window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
-	SESSION.updateData("WINDOWS_STATUS", "UP") # this may not be 100% true
 
 # Not Working, but seen in logs
 # Pops down windows "a piece"
@@ -521,7 +487,6 @@ def popWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Pop down window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Pop down window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Pop down window 3
-	SESSION.updateData("WINDOWS_STATUS", "POPPED_DOWN")
 
 # Put Convertible Top Down
 def convertibleTopDown():
