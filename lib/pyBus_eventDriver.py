@@ -247,22 +247,6 @@ def listen():
 			if message:
 				manageExternalMessages(message)
 
-		# Check external JSON sessions
-		# This will end up happening at every well defined interval going forward
-		if EXTERNAL_JSON:
-			for ext in SESSION.external_locations:
-				if ext.timeToFetch <= 0:
-					try:
-						ext_json_array = json.loads(ext.fetch())
-						for obj in ext_json_array:
-							SESSION.updateData(obj, ext_json_array[obj])
-					except Exception, e:
-						logging.error("Failed to load JSON into live session.")
-						logging.error(e)
-					ext.timeToFetch = ext.interval
-				else:
-					ext.timeToFetch -= TICK
-
 		# Write all this to a file
 		if SESSION and SESSION.write_to_file and SESSION.modified:
 			SESSION.write()
