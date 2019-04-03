@@ -492,8 +492,9 @@ def popWindowsDown():
 # Put Convertible Top Down
 def convertibleTopDown():
 	#WRITER.writeBusPacket('3F', '00', ['0C', '99', '01'])
-	WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
+	#WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
 	#WRITER.writeBusPacket('3F', '00', ['0C', '00', '66'])
+	WRITER.writeBusPacket('9C', 'BF', ['7C', '01', '71'])
 
 # Put Convertible Top Up
 def convertibleTopUp():
