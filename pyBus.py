@@ -65,7 +65,7 @@ if args.with_zmq:
 	import zmq
 
 # Make requests a little quieter
-logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.ERROR)
 
 try:
   core.initialize(args)
