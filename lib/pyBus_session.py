@@ -23,7 +23,7 @@ class ibusSession():
 			self.context = zmq.Context()
 			self.socket = self.context.socket(zmq.REP)
 			zmq_address = "tcp://127.0.0.1:{}".format(init_session_socket)
-			self.socket.bind(zmq_address) 
+			self.socket.bind(zmq_address)
 			logging.info("Started ZMQ Socket at {}.".format(zmq_address))
 
 		# Use a local dict instead of a remote one
@@ -33,8 +33,9 @@ class ibusSession():
 	# Allows for easier logging of update timing
 	def updateData(self, key, data):
 		# Write entry to main REST server
+		logging.debug("[SESSION] Posting %s with data %s to influxdb".format(key, data))
 		if self.API:
-			r = requests.post("http://localhost:5353/session/"+key, json={'value': data})
+			r = requests.post("http://localhost:5353/session/"+key, json={"value": data}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
 			if r.status_code != 200:
 				logging.debug("Failed to POST data to API: "+r.reason)
 		else:
