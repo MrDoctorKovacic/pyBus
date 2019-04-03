@@ -351,6 +351,7 @@ def d_steeringPrev(packet):
 
 def d_steeringRT(packet):
 	pressMode()
+	pressNumPad(6) # Change gain to max, better audio over aux
 
 def d_steeringSpeak(packet):
 	pressMode()
