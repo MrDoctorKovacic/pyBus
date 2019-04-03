@@ -69,7 +69,7 @@ DIRECTIVES = {
 		},
 		'C8' : {
 			'01' : None, # This can happen via RT button or ignition
-			'019A' : 'restartBoard', # RT Button
+			'019A' : '', # RT button?
 			'3B40' : None, # reset
 			'3B80' : 'd_steeringSpeak', # Dial button
 			'3B90' : 'd_steeringSpeakLong', # Dial button, long press
@@ -242,6 +242,7 @@ def shutDown():
 ############################################################################
 # All directives should have a d_ prefix as we are searching GLOBALLY for function names.. so best have unique enough names
 ############################################################################
+
 def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
@@ -367,11 +368,6 @@ def d_steeringSpeakLong(packet):
 # TYPICALLY DIRECTIVES ARE REACTIVE, THESE UTLITIES ARE ACTIVE
 ############################################################################
 
-# Restarts the SBC this is running on
-def restartBoard():
-	shutDown()
-	os.system('reboot now')
-
 # Emulates pressing the "MODE" button on stereo
 # Very useful for changing back to AUX input without using the stock radio
 def pressMode():
@@ -459,48 +455,40 @@ def openTrunk():
 	WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
 	SESSION.updateData("TRUNK_OPEN", True)
 
-# Roll all 4 windows up
-def rollWindowsUp():
-	WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Put up window 1
-	WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Put up window 2
-	WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Put up window 3
-	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Put up window 4
-
-# Roll all 4 windows down
-def rollWindowsDown():
-	WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Put down window 1
-	WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Put down window 2
-	WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Put down window 3
-	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Put down window 4
-
-# Not Working, but seen in logs
-# Pops up windows "a piece"
+### Roll windows up about 40%
+# Completely rolling up in one command is not possible
+# Rolling up 100% can be achieved by popping up about 2.5 times (3)
 def popWindowsUp():
 	WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Pop up window 1
 	WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Pop up window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Pop up window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
 
-# Not Working, but seen in logs
-# Pops down windows "a piece"
+### Roll windows down about 40%
+# Completely rolling down in one command is not possible
+# Rolling down 100% can be achieved by popping up about 2.5 times (3)
 def popWindowsDown():
 	WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Pop down window 1
 	WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Pop down window 2
 	WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Pop down window 3
 	WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Pop down window 3
 
+# Not working, but seen in logs
 # Put Convertible Top Down
 def convertibleTopDown():
-	#WRITER.writeBusPacket('3F', '00', ['0C', '99', '01'])
-	#WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
-	#WRITER.writeBusPacket('3F', '00', ['0C', '00', '66'])
-	WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
+	# These are the 3 packets sent by the vert module
+	# I realized these aren't directives, but rather progress updates
+	# 0%, 50%, and 100% respectively
+	#WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
 	#WRITER.writeBusPacket('9C', 'BF', ['7C', '04', '72'])
 	#WRITER.writeBusPacket('9C', 'BF', ['7C', '08', '72'])
+	pass
 
+# Not working, but seen in logs
 # Put Convertible Top Up
 def convertibleTopUp():
-	WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+	#WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+	pass
 
 # Tell IKE to set the time
 def _setTime(day, month, year, hour, minute):
