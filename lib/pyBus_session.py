@@ -35,7 +35,7 @@ class ibusSession():
 		# Write entry to main REST server
 		logging.debug("[SESSION] Posting %s with data %s to influxdb".format(key, data))
 		if self.API:
-			r = requests.post("http://localhost:5353/session/"+key, json={"value": data}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
+			r = requests.post("http://localhost:5353/session/"+key, json={"value": str(data)}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
 			if r.status_code != 200:
 				logging.debug("Failed to POST data to API: "+r.reason)
 		else:
