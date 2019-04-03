@@ -34,7 +34,7 @@ class ibusSession():
 	def updateData(self, key, data):
 		# Write entry to main REST server
 		if self.API:
-			r = requests.post("http://localhost:5353/session/"+key, data={'value': data})
+			r = requests.post("http://localhost:5353/session/"+key, json={'value': data})
 			if r.status_code != 200:
 				logging.debug("Failed to POST data to API: "+r.reason)
 		else:
