@@ -14,6 +14,9 @@ class ibusSession():
 	def __init__(self, init_with_api=False, init_session_socket=False):
 		global zmq
 
+		# Make requests a little quieter
+		logging.getLogger("requests").setLevel(logging.ERROR)
+		
 		# if we're extending functionality with external GoQMW API
 		self.API = init_with_api
 
