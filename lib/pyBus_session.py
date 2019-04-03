@@ -15,8 +15,9 @@ class ibusSession():
 		global zmq
 
 		# Make requests a little quieter
-		logging.getLogger("requests").setLevel(logging.ERROR)
-		
+		logging.getLogger("requests").setLevel(logging.CRITICAL)
+		logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+
 		# if we're extending functionality with external GoQMW API
 		self.API = init_with_api
 
