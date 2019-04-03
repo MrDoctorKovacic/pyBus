@@ -495,13 +495,12 @@ def convertibleTopDown():
 	#WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
 	#WRITER.writeBusPacket('3F', '00', ['0C', '00', '66'])
 	WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
-	WRITER.writeBusPacket('9C', 'BF', ['7C', '04', '72'])
-	WRITER.writeBusPacket('9C', 'BF', ['7C', '08', '72'])
+	#WRITER.writeBusPacket('9C', 'BF', ['7C', '04', '72'])
+	#WRITER.writeBusPacket('9C', 'BF', ['7C', '08', '72'])
 
 # Put Convertible Top Up
 def convertibleTopUp():
-	#WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
-	WRITER.writeBusPacket('3F', '00', ['0C', '7E', '01'])
+	WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
 
 # Tell IKE to set the time
 def _setTime(day, month, year, hour, minute):
