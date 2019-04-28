@@ -1,4 +1,4 @@
-pyBus
+MDroid: pyBus
 =====
 ### Forked from ezeakeal's excellent [pyBus](https://github.com/ezeakeal/pyBus)
 
@@ -19,10 +19,11 @@ K/I-BUS issues can be difficult to diagnose and fix, so please don't use this to
 	* `pip install pyserial requests` 
 
 ## Optional Features
+* **[MDroid-Core](https://github.com/MrDoctorKovacic/MDroid-Core)** (defined by --with-api) is a REST interface allowing time-series logging, Bluetooth control, and receiving commands from an external interface. It also makes logging other data such as OBD or GPS pretty seamless.
+
 *Note: this branch has been slashed of features. I wanted to avoid a one-size-fits-all program since growing requirements will make this unwieldy. This is now first and foremost an I-BUS interface.*
-* **ZeroMQ:** Listen on a port for external commands. Opens up a janky REST api. 
-	* https://github.com/MonsieurV/ZeroMQ-RPi 
-* **More Features** including Bluetooth, MySQL logging, and remote files can be found on [an earlier branch](https://github.com/MrDoctorKovacic/pyBus/tree/soylentspaghetti). 
+
+* **More Native Features** including Bluetooth, MySQL logging, and remote files can be found on [an earlier branch](https://github.com/MrDoctorKovacic/pyBus/tree/soylentspaghetti). 
 
 ## Quick Start
 * Install the prerequisites above 
@@ -31,7 +32,7 @@ K/I-BUS issues can be difficult to diagnose and fix, so please don't use this to
 	* E.g. `./pyBus.py --device /dev/ttyUSB0` 
 
 ## Advanced Usage
-`./pyBus.py --device <PATH to USB Device> --with-bt <BT:MAC:ADDRESS> --with-zmq <ZMQ Port> --with-session <PATH to session file> --with-mysql <Username> <Password> <Database>` 
+`./pyBus.py --device <PATH to USB Device> --with-api http://localhost:5353 --with-session <PATH to session file>` 
 
 ## A Longer Drive
 The meat and potatoes lie in pyBus_eventDriver.py - in there you'll find a large list of both **Directives** and **Utilities**. Generally speaking Directives are *reactive*, defining what happens when the interface reads specific activity. Utilities meanwhile are *active*, and are designed to emulate specific functions. 

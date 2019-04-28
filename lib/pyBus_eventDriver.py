@@ -139,8 +139,6 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 #####################################
 WRITER = None
 SESSION = None
-LISTEN_FOR_EXTERNAL_COMMANDS = False
-LISTEN_PORT = None
 WITH_API = False
 
 #####################################
@@ -148,15 +146,9 @@ WITH_API = False
 #####################################
 # Set the WRITER object (the iBus interface class) to an instance passed in from the CORE module
 def init(writer, args):
-	global WRITER, SESSION, WITH_API, LISTEN_FOR_EXTERNAL_COMMANDS, LISTEN_PORT
+	global WRITER, SESSION, WITH_API
 
-	# Setup ZMQ if necc
-	if args.with_zmq:
-		# Session object for writing and sending log info abroad
-		LISTEN_FOR_EXTERNAL_COMMANDS = True
-		LISTEN_PORT = args.with_zmq
-
-	# Determine if we're extending functionality with external GoQMW API
+	# Determine if we're extending functionality with external MDroid-Core API
 	WITH_API = args.with_api
 
 	# Start ibus writer
@@ -164,7 +156,7 @@ def init(writer, args):
 	pB_ticker.init(WRITER)
 
 	# Start PyBus logging Session
-	SESSION = pB_session.ibusSession(WITH_API, LISTEN_PORT)
+	SESSION = pB_session.ibusSession(WITH_API)
 
 	# Turn on the 'clown nose' for 3 seconds
 	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
@@ -217,7 +209,7 @@ def listen():
 			manage(packet)
 
 		# Check external messages
-		if LISTEN_FOR_EXTERNAL_COMMANDS:
+		if WITH_API:
 			message = SESSION.checkExternalMessages()
 			if message:
 				manageExternalMessages(message)
@@ -226,9 +218,6 @@ def listen():
 
 # Shutdown pyBus
 def shutDown():
-	if LISTEN_FOR_EXTERNAL_COMMANDS:
-		SESSION.close()
-
 	logging.info("Killing tick utility.")
 	pB_ticker.shutDown()
 
@@ -525,7 +514,6 @@ def manageExternalMessages(message):
 			response = json.dumps(data)
 		else:
 			response = "OK" # 10-4
-		SESSION.socket.send(response) 
 
 		logging.info("Sending response: {}".format(response))
 

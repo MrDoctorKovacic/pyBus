@@ -41,8 +41,7 @@ def createParser():
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
   parser.add_argument('--device', action='store', required=True, help='Path to iBus interface.')
-  parser.add_argument('--with-api', action='store_true', help='If we should use the external GoQMW api for better integration.')
-  parser.add_argument('--with-zmq', action='store', help='ZMQ port to listen on.')
+  parser.add_argument('--with-api', action='store_true', help='If we should use the external MDroid-Core api for more functionality.')
   parser.add_argument('--with-session', action='store', help='File to output momentary session.')
   return parser
 
@@ -59,10 +58,6 @@ configureLogging(loglevel)
 
 devPath = args.device if args.device else "/dev/ttyUSB0"
 core.DEVPATH = devPath if devPath else "/dev/ttyUSB0"
-
-# Conditionally import ZMQ
-if args.with_zmq:
-	import zmq
 
 # Make requests a little quieter
 logging.getLogger("requests").setLevel(logging.ERROR)
