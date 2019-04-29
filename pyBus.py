@@ -41,7 +41,7 @@ def createParser():
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
   parser.add_argument('--device', action='store', required=True, help='Path to iBus interface.')
-  parser.add_argument('--with-api', action='store_true', help='If we should use the external MDroid-Core api for more functionality.')
+  parser.add_argument('--with-api', action='store', help='If we should use the external MDroid-Core api for more functionality.')
   parser.add_argument('--with-session', action='store', help='File to output momentary session.')
   return parser
 
