@@ -111,15 +111,13 @@ DIRECTIVES = {
 			'ALL' : 'd_custom_IKE' # Use ALL to send all data to a particular function
 		}
 	},
-	'C0' : {
+	'C0' : { # telephone module
+		'80' : {  # IKE
+			'234220' : 'd_steeringRT' # Telephone invoked (from steering wheel?)
+		},
 		'68' : {
 			'3100000B' : None, # Mode button pressed
 			'3100134B' : None, # Mode button released
-		}
-	},
-	'C0' : { # telephone module
-		'80' : { # IKE
-			'234220' : 'd_steeringRT' # Telephone invoked (from steering wheel?)
 		}
 	},
 	'E8' : {
@@ -140,6 +138,7 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 WRITER = None
 SESSION = None
 WITH_API = False
+MEDIA_HOST = "http://media.quinncasey.com:5353"
 
 #####################################
 # FUNCTIONS
@@ -236,11 +235,11 @@ def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
-	logging.debug(requests.get("http://localhost:5353/bluetooth/pause"))
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/pause"))
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
-	logging.debug(requests.get("http://localhost:5353/bluetooth/play"))
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/play"))
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
@@ -325,7 +324,7 @@ def d_diagnostic(packet):
 	SESSION.updateData("DIAGNOSTIC", (''.join(packet['dat'])))
 
 def d_togglePause(packet):
-	logging.debug(requests.get("http://localhost:5353/bluetooth/pause"))
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/pause"))
 
 def d_cdNext(packet):
 	pass
@@ -334,10 +333,10 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	logging.debug(requests.get("http://localhost:5353/bluetooth/next"))
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/next"))
 
 def d_steeringPrev(packet):
-	logging.debug(requests.get("http://localhost:5353/bluetooth/prev"))
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/prev"))
 
 def d_steeringRT(packet):
 	pressMode()
