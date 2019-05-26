@@ -26,9 +26,11 @@ class ibusSession():
 	def updateData(self, key, data):
 		# Write entry to main REST server
 		if self.API:
-			r = requests.post(self.API+"/session/"+key, json={"value": str(data)}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
-			if r.status_code != 200:
-				logging.debug("Failed to POST data to API: "+r.reason)
+			# Ignore speed and RPM / SPEED
+			if key is not "RPM" and key is not "SPEED":
+				r = requests.post(self.API+"/session/"+key, json={"value": str(data)}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
+				if r.status_code != 200:
+					logging.debug("Failed to POST data to API: "+r.reason)
 		else:
 			self.data[key] = data
 
