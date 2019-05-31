@@ -50,17 +50,20 @@ DIRECTIVES = {
 			'OTHER'  : 'd_diagnostic'
 		}
 	},
-	'44' : {
-		'BF' : {
+	'44' : { # EWS Ignition / Immobilizer
+		'BF' : { # Global
+			'740400' : None, # Toggle key in/out?
+			'740500' : 'd_keyIn', # Key in, to 2nd position
 			'7401FF' : 'd_keyOut',
-				'7400' : 'd_keyIn',
-					'7A' : 'd_windowDoorMessage'
+			'7400FF' : 'd_keyOut',
+			#'7400' : 'd_keyIn',
+			'7A' : 'd_windowDoorMessage'
 		}
 	},
 	'50' : { # MF Steering Wheel Buttons
 		'68' : { # RADIO
-			'3210' : 'd_volumeDown',
-			'3211' : 'd_volumeUp',
+			'3210' : None, # Volume Down
+			'3211' : None, # Volume Up
 			'3B01' : 'd_steeringNext',
 			'3B11' : None, # Next, long press
 			'3B21' : None, # Next Released
@@ -128,7 +131,7 @@ DIRECTIVES = {
 	},
 	'F0' : { # Board Monitor Buttons
 		'68' : { # Radio
-			'4806' : None # power off pressed?
+			'4806' : None # Radio power toggled
 
 		}
 	}
@@ -248,6 +251,7 @@ def d_keyOut(packet):
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
+	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/connect"))
 	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/play"))
 
 # Called whenever doors are locked.
