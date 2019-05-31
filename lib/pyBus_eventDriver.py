@@ -516,8 +516,8 @@ def manageExternalMessages(message):
 		# Check if we have raw data first
 		if message[0] == '[':
 			# this is dangerous without auth, and even then I don't like it
-			parsedList = ast.literal_eval(message)
-			if len(parsedList) == 3 and len(parsedList[0] == 2) and len(parsedList[1] == 2):
+			parsedList = ast.literal_eval(str(message))
+			if parsedList and len(parsedList) == 3 and len(parsedList[0] == 2) and len(parsedList[1] == 2):
 				parsedData = [parsedList[2][i:i+2] for i in range(0, len(parsedList[2]), 2)]
 				WRITER.writeBusPacket(parsedList[0], parsedList[1], parsedData)
 		else:
