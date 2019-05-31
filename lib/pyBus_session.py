@@ -41,7 +41,8 @@ class ibusSession():
 			r = requests.get(self.API+"/pybus/queue")
 			if r.status_code == 200:
 				message = r.json()
-				logging.info("Got External Message: {}".format(message))
+				if message != "{}":
+					logging.info("Got External Message: {}".format(message))
 				return message
 			else:
 				logging.debug("Failed to POST data to API: "+r.reason)
