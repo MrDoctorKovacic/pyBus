@@ -10,6 +10,7 @@ import logging
 import traceback
 import datetime
 import requests
+import ast
 
 import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
@@ -124,6 +125,12 @@ DIRECTIVES = {
 		'D0' : {
 			'ALL' : 'd_rainLightSensor'
 		}
+	},
+	'F0' : { # Board Monitor Buttons
+		'68' : { # Radio
+			'4806' : None # power off pressed?
+
+		}
 	}
 }
 
@@ -172,13 +179,15 @@ def manage(packet):
 	methodName = None
 
 	try:
-		dstDir = DIRECTIVES[src][dst]
-		if ('ALL'  in dstDir.keys()):
-			methodName = dstDir['ALL']
-		elif (dataString in dstDir):
-			methodName = dstDir[dataString]
-		elif ('OTHER' in dstDir.keys()):
-			methodName = dstDir['OTHER']
+		# First check if the src / dest is mapped in directives dict above
+		if src in DIRECTIVES and dst in DIRECTIVES[src]:
+			dstDir = DIRECTIVES[src][dst]
+			if ('ALL'  in dstDir.keys()):
+				methodName = dstDir['ALL']
+			elif (dataString in dstDir):
+				methodName = dstDir[dataString]
+			elif ('OTHER' in dstDir.keys()):
+				methodName = dstDir['OTHER']
 	except Exception, e:
 		logging.debug("Exception from packet manager [%s]" % e)
 		
@@ -210,7 +219,7 @@ def listen():
 		# Check external messages
 		if WITH_API:
 			message = SESSION.checkExternalMessages()
-			if message:
+			if message and message != '{}':
 				manageExternalMessages(message)
 
 		time.sleep(TICK) # sleep a bit
@@ -504,17 +513,25 @@ def _softAlarm():
 # Handles various external messages, usually by calling an ibus directive
 def manageExternalMessages(message):
 	try:
-		# Messy, but calls a directive given the chance
-		methodToCall = globals().get(message, None)
-		data = methodToCall()
-
-		# Either send (requested) data or an acknowledgement back to node
-		if data is not None:
-			response = json.dumps(data)
+		# Check if we have raw data first
+		if message[0] == '[':
+			# this is dangerous without auth, and even then I don't like it
+			parsedList = ast.literal_eval(message)
+			if len(parsedList) == 3 and len(parsedList[0] == 2) and len(parsedList[1] == 2):
+				parsedData = [parsedList[2][i:i+2] for i in range(0, len(parsedList[2]), 2)]
+				WRITER.writeBusPacket(parsedList[0], parsedList[1], parsedData)
 		else:
-			response = "OK" # 10-4
+			# Messy, but calls a directive given the chance
+			methodToCall = globals().get(message, None)
+			data = methodToCall()
 
-		logging.info("Sending response: {}".format(response))
+			# Either send (requested) data or an acknowledgement back to node
+			if data is not None:
+				response = json.dumps(data)
+			else:
+				response = "OK" # 10-4
+
+			logging.info("Sending response: {}".format(response))
 
 	except Exception, e:
 		logging.error("Failed to call directive from external command.\n{}".format(e))
