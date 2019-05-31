@@ -247,13 +247,11 @@ def d_keyOut(packet):
 	SESSION.updateData("POWER_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/pause"))
 	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/disconnect"))
 
 def d_keyIn(packet):
 	SESSION.updateData("POWER_STATE", True)
 	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/connect"))
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/play"))
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
