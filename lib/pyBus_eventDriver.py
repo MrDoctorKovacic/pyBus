@@ -33,8 +33,12 @@ DIRECTIVES = {
 		'BF' : {
 			'0200B9' : 'd_carUnlocked', # Unlocked via key
 			'7212DB' : 'd_carLocked', # Locked via key
-			'7A1000' : None, # passenger door opened, probably
-			'7A5202' : None, # passenger door closed, probably
+			#'7A1000' : None, # passenger door opened, probably
+			'7A1203' : None, # passenger door opened, probably
+			'7A5203' : None, # passenger door opened, probably
+			#'7A5202' : None, # passenger door closed, probably
+			'7A5003' : None, # passenger door closed
+			'7A1003' : None, # passenger door closed, probably
 			'7A5020' : None, # driver window popped up after closing door
 			'7A5021' : None, # driver door closed
 			'7A5120' : None, # driver window popped down before opening door
@@ -54,8 +58,8 @@ DIRECTIVES = {
 		'BF' : { # Global
 			'740400' : None, # Toggle key in/out?
 			'740500' : 'd_keyIn', # Key in, to 2nd position
-			'7401FF' : 'd_keyOut',
-			'7400FF' : 'd_keyOut',
+			'7401FF' : 'd_keyOut', # Triggred by pulling the key out
+			'7400FF' : 'd_keyOut', # This is in response to a request
 			#'7400' : 'd_keyIn',
 			'7A' : 'd_windowDoorMessage'
 		}
@@ -122,6 +126,12 @@ DIRECTIVES = {
 		'68' : {
 			'3100000B' : None, # Mode button pressed
 			'3100134B' : None, # Mode button released
+		}
+	},
+	'D0' : {
+		'BF' : {
+			'5B6100040001' : None, # hazard lights turned on (including interior)
+			'5B0100000001' : None # hazard lights turned off (including interior)
 		}
 	},
 	'E8' : {
@@ -437,7 +447,10 @@ def turnOnFlashers():
 # Not Working, but seen in logs
 # Turns on hazards, including interior light
 def turnOnHazards():
-	WRITER.writeBusPacket('3F', '00', ['0C', '70', '01'])
+	WRITER.writeBusPacket('D0', 'BF', ['5B', '61', '00', '04', '00', '01'])
+
+def turnOffHazards():
+	WRITER.writeBusPacket('D0', 'BF', ['5B', '01', '00', '00', '00', '01'])
 
 # Not Working, but seen in logs
 # Slowly dim interior lights

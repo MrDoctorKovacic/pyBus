@@ -8,6 +8,7 @@ import traceback
 import logging
 import argparse
 import gzip
+import json
 import pyBus_core as core
 
 #####################################
@@ -40,9 +41,7 @@ def configureLogging(numeric_level):
 def createParser():
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
-  parser.add_argument('--device', action='store', required=True, help='Path to iBus interface.')
-  parser.add_argument('--with-api', action='store', help='If we should use the external MDroid-Core api for more functionality.')
-  parser.add_argument('--with-session', action='store', help='File to output momentary session.')
+  parser.add_argument('--settings', action='store', required=True, help='Config file to load Device and API settings.')
   return parser
 
 #####################################
@@ -56,14 +55,42 @@ _startup_cwd = os.getcwd()
 signal.signal(signal.SIGINT, signal_handler_quit) # Manage Ctrl+C
 configureLogging(loglevel)
 
-devPath = args.device if args.device else "/dev/ttyUSB0"
-core.DEVPATH = devPath if devPath else "/dev/ttyUSB0"
+devPath = "/dev/ttyUSB0"
+core.DEVPATH = "/dev/ttyUSB0"
+
+config = dict()
+
+# Overwrite defaults if settings file is provided
+if args.settings:
+	if os.path.isfile(args.settings): 
+		try:
+			with open(args.settings) as json_file:
+				data = json.load(json_file)
+				if "CONFIG" in data:
+					# Setup MDroid API
+					if "MDROID_HOST" in data["CONFIG"]:
+						config["with_api"] = data["CONFIG"]["MDROID_HOST"]
+					else:
+						logging.debug("MDROID_HOST not found in config file, not using MDroid API.")
+
+					# Setup device
+					if "PYBUS_DEVICE" in data["CONFIG"]:
+						devPath = data["CONFIG"]["PYBUS_DEVICE"]
+						core.DEVPATH = data["CONFIG"]["PYBUS_DEVICE"]
+					else: 
+						logging.debug("PYBUS_DEVICE not found in config file, using defaults.")
+
+		except IOError as e:
+			logging.error("Failed to open settings file:"+args.settings)
+			logging.error(e)
+	else:
+		logging.error("Could not load settings from file"+str(args.settings))
 
 # Make requests a little quieter
 logging.getLogger("requests").setLevel(logging.ERROR)
 
 try:
-  core.initialize(args)
+  core.initialize(config)
   core.run()
 except Exception:
   logging.error("Caught unexpected exception:\n{}".format(traceback.format_exc()))
