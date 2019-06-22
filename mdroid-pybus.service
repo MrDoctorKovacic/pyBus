@@ -1,0 +1,14 @@
+[Unit]
+Description=MDroid PyBus
+After=influxd.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=2
+User=root
+ExecStart=/usr/bin/python /home/pi/MDroid/pyBus/pyBus.py --settings-file /home/pi/MDroid/config.json &> /home/pi/MDroid/logs/pybus/`date +\%Y-\%m-\%d_\%H:\%M:\%S`-pybus.log
+
+[Install]
+WantedBy=multi-user.target

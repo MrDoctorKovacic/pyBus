@@ -41,7 +41,7 @@ def configureLogging(numeric_level):
 def createParser():
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
-  parser.add_argument('--settings', action='store', required=True, help='Config file to load Device and API settings.')
+  parser.add_argument('--settings-file', action='store', required=True, help='Config file to load Device and API settings.')
   return parser
 
 #####################################
