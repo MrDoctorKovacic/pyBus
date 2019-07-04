@@ -61,10 +61,10 @@ core.DEVPATH = "/dev/ttyUSB0"
 config = dict()
 
 # Overwrite defaults if settings file is provided
-if args.settings:
-	if os.path.isfile(args.settings): 
+if args.settings_file:
+	if os.path.isfile(args.settings_file): 
 		try:
-			with open(args.settings) as json_file:
+			with open(args.settings_file) as json_file:
 				data = json.load(json_file)
 				if "CONFIG" in data:
 					# Setup MDroid API
@@ -81,10 +81,10 @@ if args.settings:
 						logging.debug("PYBUS_DEVICE not found in config file, using defaults.")
 
 		except IOError as e:
-			logging.error("Failed to open settings file:"+args.settings)
+			logging.error("Failed to open settings file:"+args.settings_file)
 			logging.error(e)
 	else:
-		logging.error("Could not load settings from file"+str(args.settings))
+		logging.error("Could not load settings from file"+str(args.settings_file))
 
 # Make requests a little quieter
 logging.getLogger("requests").setLevel(logging.ERROR)
