@@ -254,34 +254,40 @@ def shutDown():
 ############################################################################
 
 def d_keyOut(packet):
-	SESSION.updateData("POWER_STATE", False)
+	SESSION.updateData("KEY_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
 	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/disconnect"))
 
 def d_keyIn(packet):
-	SESSION.updateData("POWER_STATE", True)
+	SESSION.updateData("KEY_STATE", True)
 	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/connect"))
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
 	SESSION.updateData("DOOR_LOCKED_DRIVER", True)
 	SESSION.updateData("DOOR_LOCKED_PASSENGER", True)
+	SESSION.updateData("DOORS_LOCKED", True)
 
 # Called whenever ALL doors are unlocked.
 def d_carUnlocked(packet = None):
 	SESSION.updateData("DOOR_LOCKED_DRIVER", False)
 	SESSION.updateData("DOOR_LOCKED_PASSENGER", False)
+	SESSION.updateData("DOORS_LOCKED", False)
 
 # Called whenever ONLY passenger door is locked
 # This isn't very often, especially on coupe models
 def d_passengerDoorLocked(packet):
 	SESSION.updateData("DOOR_LOCKED_PASSENGER", True)
+	if SESSION.data["DOOR_LOCKED_DRIVER"]:
+		SESSION.updateData("DOORS_LOCKED", True)
 
 # Called whenever ONLY DRIVER door is locked
 # This isn't very often, especially on coupe models
 def d_driverDoorLocked(packet):
 	SESSION.updateData("DOOR_LOCKED_DRIVER", True)
+	if SESSION.data["DOOR_LOCKED_PASSENGER"]:
+		SESSION.updateData("DOORS_LOCKED", True)
 
 # This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. 
 # But the data for speed/rpm will vary, so it must be parsed via a method linked to 'ALL' data in the JSON DIRECTIVES
@@ -291,13 +297,13 @@ def d_custom_IKE(packet):
 	# Ignition Status
 	if packet_data[0] == '11':
 		if (packet_data[1] == '00'): # Key Out.
-			SESSION.updateData("POWER_STATE", False)
+			SESSION.updateData("KEY_STATE", False)
 		elif (packet_data[1] == '01'): # Pos 1
-			SESSION.updateData("POWER_STATE", "POS_1")
+			SESSION.updateData("KEY_STATE", "POS_1")
 		elif (packet_data[1] == '03'): # Pos 2
-			SESSION.updateData("POWER_STATE", "POS_2")
+			SESSION.updateData("KEY_STATE", "POS_2")
 		elif (packet_data[1] == '07'): # Start
-			SESSION.updateData("POWER_STATE", "START")
+			SESSION.updateData("KEY_STATE", "START")
 
 	# Sensor Status, broadcasted every 10 seconds
 	elif packet_data[0] == '13':
