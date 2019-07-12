@@ -79,7 +79,8 @@ class ibusFace ( ):
 			baudrate=9600,
 			bytesize=serial.EIGHTBITS,
 			parity=serial.PARITY_EVEN,
-			stopbits=serial.STOPBITS_ONE
+			stopbits=serial.STOPBITS_ONE,
+			timeout=0.5
 		)
 		self.SDEV.setDTR(True)
 		self.SDEV.flushInput()
@@ -88,23 +89,20 @@ class ibusFace ( ):
 		logging.debug("Initialized iBus")
 
 	# Wait for a significant delay in the bus before parsing stuff (signals separated by pauses)
-	#
-	# TODO: Timeout, allowing pyBus to proceed when quiet
-	# When car is off, the ibus is far quieter and data isn't coming in at a lockstep.
-	# This function should timeout if the host intends to be powered on even when the car is not.
-	#
 	def waitClearBus(self):
 		logging.debug("Waiting for clear bus")
 		oldTime = time.time()
-		totalTime = 0
 		while True:
 			# Wait for large interval between packets
-			self.readChar() # will be src packet if there was a significant delay between packets. Otherwise its nothing useful
+			srcPacket = self.readChar() # will be src packet if there was a significant delay between packets. Otherwise its nothing useful
 			newTime = time.time()
 			deltaTime = newTime - oldTime
-			totalTime += deltaTime # Tracking how long we've spent waiting
 			oldTime = newTime
 			if deltaTime > 0.1:
+				# If srcPacket is none, the serial read timed out, meaning the bus is both quiet and clear
+				if not srcPacket:
+					return
+
 				break # we have found a significant delay in signals, but have swallowed the first character in doing so.
 							# So the next code swallows what should be the rest of the packet
 
@@ -126,6 +124,11 @@ class ibusFace ( ):
 			"xor" : None
 		}
 		packet["src"] = self.readChar()
+
+		# If src is none, chances are we timed out
+		if not packet["src"]:
+			return None
+
 		packet["len"] = self.readChar()
 		packet["dst"] = self.readChar()
 
@@ -142,17 +145,28 @@ class ibusFace ( ):
 		packet['dat'] = dataTmp
 		packet['xor'] = self.readChar()
 		valStr = [packet['src'], packet['len'], packet['dst'], packet['dat'], packet['xor']]
-		logging.debug("READ: [%s -> %s] %s" % (LOCATIONS[packet["src"]], LOCATIONS[packet["dst"]], valStr))
-		return packet
+
+		if packet['dat']:
+			srcLocation = LOCATIONS[packet["src"]] if packet["src"] in LOCATIONS else packet["src"]
+			dstLocation = LOCATIONS[packet["dst"]] if packet["dst"] in LOCATIONS else packet["dst"]
+
+			logging.debug("READ: [%s -> %s] %s" % (srcLocation, dstLocation, valStr))
+			return packet
+		else:
+			logging.debug("Empty packet! Got: %s" % (valStr))
+			return None
 
 	# Read in one character from the bus and convert to hex
 	def readChar(self):
 		char = self.SDEV.read(1)
-		try:
-			char = '%02X' % ord(char)
-		except serial.SerialException, e: 
-			logging.warning("Hit a serialException: %s" % e)
-			pass
+
+		# char is empty, that means the read timed out
+		if char:
+			try:
+				char = '%02X' % ord(char)
+			except serial.SerialException, e: 
+				logging.warning("Hit a serialException: %s" % e)
+				pass
 		return char
 
 	# Write a string of data created from complete contents of packet

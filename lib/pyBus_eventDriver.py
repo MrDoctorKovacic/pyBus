@@ -168,7 +168,10 @@ def init(writer, args):
 	global WRITER, SESSION, WITH_API
 
 	# Determine if we're extending functionality with external MDroid-Core API
-	WITH_API = args.with_api
+	if args:
+		WITH_API = args.with_api
+	else:
+		WITH_API = False
 
 	# Start ibus writer
 	WRITER = writer

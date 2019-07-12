@@ -20,6 +20,7 @@ class ibusSession():
 
 		# Use a local dict instead of a remote one
 		if not self.API:
+			logging.info("Not using API, building internal session dict instead")
 			self.data = dict()
 
 	# Allows for easier logging of update timing
