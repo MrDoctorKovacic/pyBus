@@ -168,9 +168,12 @@ def init(writer, args):
 	global WRITER, SESSION, WITH_API
 
 	# Determine if we're extending functionality with external MDroid-Core API
-	if args:
-		WITH_API = args.with_api
+	if args and args["with_api"]:
+		WITH_API = args["with_api"]
 	else:
+		if args:
+			logging.info("Not using MDroid API, despite finding the following config:")
+			logging.info(str(args))
 		WITH_API = False
 
 	# Start ibus writer
