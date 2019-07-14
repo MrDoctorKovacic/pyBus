@@ -9,8 +9,6 @@ import logging
 import argparse
 import gzip
 import json
-
-sys.path.append('./lib/')
 import pyBus_core as core
 
 #####################################
