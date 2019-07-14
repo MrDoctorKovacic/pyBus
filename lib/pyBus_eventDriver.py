@@ -12,7 +12,7 @@ import datetime
 import requests
 import ast
 
-import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
+#import pyBus_tickUtil as pB_ticker # Ticker for signals requiring intervals
 import pyBus_session as pB_session # Session object for writing and sending log info abroad
 
 # This module will read a packet, match it against the json object 'DIRECTIVES' below. 
@@ -178,7 +178,7 @@ def init(writer, args):
 
 	# Start ibus writer
 	WRITER = writer
-	pB_ticker.init(WRITER)
+	#pB_ticker.init(WRITER)
 
 	# Start PyBus logging Session
 	SESSION = pB_session.ibusSession(WITH_API)
@@ -246,7 +246,7 @@ def listen():
 # Shutdown pyBus
 def shutDown():
 	logging.info("Killing tick utility.")
-	pB_ticker.shutDown()
+	#pB_ticker.shutDown()
 
 ############################################################################
 # FROM HERE ON ARE THE DIRECTIVES
