@@ -263,11 +263,21 @@ def d_keyOut(packet):
 	SESSION.updateData("KEY_STATE", False)
 	SESSION.updateData("RPM", 0)
 	SESSION.updateData("SPEED", 0)
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/disconnect"))
+	if MEDIA_HOST: 
+		try:
+			logging.debug(requests.get(MEDIA_HOST+"/bluetooth/disconnect"))
+		except Exception, e:
+			logging.debug("Failed to send GET request to "+MEDIA_HOST+"/bluetooth/disconnect")
+			logging.debug(e)
 
 def d_keyIn(packet):
 	SESSION.updateData("KEY_STATE", True)
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/connect"))
+	if MEDIA_HOST: 
+		try:
+			logging.debug(requests.get(MEDIA_HOST+"/bluetooth/connect"))
+		except Exception, e:
+			logging.debug("Failed to send GET request to "+MEDIA_HOST+"/bluetooth/connect")
+			logging.debug(e)
 
 # Called whenever doors are locked.
 def d_carLocked(packet = None):
@@ -358,7 +368,12 @@ def d_diagnostic(packet):
 	SESSION.updateData("DIAGNOSTIC", (''.join(packet['dat'])))
 
 def d_togglePause(packet):
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/pause"))
+	if MEDIA_HOST: 
+		try:
+			logging.debug(requests.get(MEDIA_HOST+"/bluetooth/pause"))
+		except Exception, e:
+			logging.debug("Failed to send GET request to "+MEDIA_HOST+"/bluetooth/pause")
+			logging.debug(e)
 
 def d_cdNext(packet):
 	pass
@@ -367,10 +382,20 @@ def d_cdPrev(packet):
 	pass
 
 def d_steeringNext(packet):
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/next"))
+	if MEDIA_HOST: 
+		try:
+			logging.debug(requests.get(MEDIA_HOST+"/bluetooth/next"))
+		except Exception, e:
+			logging.debug("Failed to send GET request to "+MEDIA_HOST+"/bluetooth/next")
+			logging.debug(e)
 
 def d_steeringPrev(packet):
-	if MEDIA_HOST: logging.debug(requests.get(MEDIA_HOST+"/bluetooth/prev"))
+	if MEDIA_HOST: 
+		try:
+			logging.debug(requests.get(MEDIA_HOST+"/bluetooth/prev"))
+		except Exception, e:
+			logging.debug("Failed to send GET request to "+MEDIA_HOST+"/bluetooth/prev")
+			logging.debug(e)
 
 def d_steeringRT(packet):
 	pressMode()
