@@ -18,15 +18,20 @@ class ibusSession():
 		# if we're extending functionality with external MDroid-Core
 		self.API = init_with_api
 
-		# Use a local dict instead of a remote one
+		# Set up local dict for storing session
+		self.data = dict()
+		
 		if not self.API:
 			logging.info("Not using API, building internal session dict instead")
-			self.data = dict()
 
 	# Allows for easier logging of update timing
 	def updateData(self, key, data):
 		key = str(key).upper()
 		data = str(data).upper()
+
+		# Keep a copy in our local dict
+		self.data[key] = data
+
 		# Write entry to main REST server
 		if self.API:
 			# Ignore speed and RPM / SPEED
@@ -34,8 +39,6 @@ class ibusSession():
 				r = requests.post(self.API+"/session/"+key, json={"value": data}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
 				if r.status_code != 200:
 					logging.debug("Failed to POST data to API: "+r.reason)
-		else:
-			self.data[key] = data
 
 	# Checks for any external messages sent to socket,
 	def checkExternalMessages(self):
