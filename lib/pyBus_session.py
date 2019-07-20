@@ -25,11 +25,13 @@ class ibusSession():
 
 	# Allows for easier logging of update timing
 	def updateData(self, key, data):
+		key = str(key).upper()
+		data = str(data).upper()
 		# Write entry to main REST server
 		if self.API:
 			# Ignore speed and RPM / SPEED
 			if key is not "RPM" and key is not "SPEED":
-				r = requests.post(self.API+"/session/"+key, json={"value": str(data)}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
+				r = requests.post(self.API+"/session/"+key, json={"value": data}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
 				if r.status_code != 200:
 					logging.debug("Failed to POST data to API: "+r.reason)
 		else:
