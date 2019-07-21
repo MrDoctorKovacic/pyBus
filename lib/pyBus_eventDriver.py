@@ -43,6 +43,8 @@ DIRECTIVES = {
 			'7A5021' : None, # driver door closed
 			'7A5120' : None, # driver window popped down before opening door
 			'7A5121' : None, # driver door opened
+			'7A1000' : 'd_carUnlocked', # Doors unlocked (from console button)
+			'7A2000' : 'd_carLocked', # Doors unlocked (from console button)
 		}
 	},
 	'3F' : {
