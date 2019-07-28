@@ -127,11 +127,14 @@ class ibusFace ( ):
 
 		# If these are none, chances are we timed out
 		# Regardless, the packet is not useful
-		if not packet["src"] or not packet["len"] or not packet["dst"]:
+		if not packet["src"]:
 			return None
 
 		packet["len"] = self.readChar()
 		packet["dst"] = self.readChar()
+
+		if not packet["len"] or not packet["dst"]:
+			return None
 
 		dataLen = int(packet['len'], 16) - 2
 		if dataLen > 20:

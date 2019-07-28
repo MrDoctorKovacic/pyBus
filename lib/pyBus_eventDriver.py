@@ -247,7 +247,7 @@ def listen():
 			time.sleep(TICK) # sleep a bit
 		except Exception, e:
 			# If an exception bubbles up this far, we've really messed up
-			logging.debug("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n%s" % e)
+			logging.error("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n%s" % e)
 
 # Shutdown pyBus
 def shutDown():
