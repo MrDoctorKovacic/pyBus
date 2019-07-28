@@ -66,17 +66,17 @@ if args.settings_file:
 		try:
 			with open(args.settings_file) as json_file:
 				data = json.load(json_file)
-				if "CONFIG" in data:
+				if "MDROID" in data:
 					# Setup MDroid API
-					if "MDROID_HOST" in data["CONFIG"]:
-						config["with_api"] = data["CONFIG"]["MDROID_HOST"]
+					if "MDROID_HOST" in data["MDROID"]:
+						config["with_api"] = data["MDROID"]["MDROID_HOST"]
 					else:
 						logging.debug("MDROID_HOST not found in config file, not using MDroid API.")
 
 					# Setup device
-					if "PYBUS_DEVICE" in data["CONFIG"]:
-						devPath = data["CONFIG"]["PYBUS_DEVICE"]
-						core.DEVPATH = data["CONFIG"]["PYBUS_DEVICE"]
+					if "PYBUS_DEVICE" in data["MDROID"]:
+						devPath = data["MDROID"]["PYBUS_DEVICE"]
+						core.DEVPATH = data["MDROID"]["PYBUS_DEVICE"]
 					else: 
 						logging.debug("PYBUS_DEVICE not found in config file, using defaults.")
 
