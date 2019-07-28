@@ -232,18 +232,22 @@ def manage(packet):
 def listen():
 	logging.info('Event listener initialized')
 	while True:
-		# Grab packet and manage appropriately
-		packet = WRITER.readBusPacket()
-		if packet:
-			manage(packet)
+		try:
+			# Grab packet and manage appropriately
+			packet = WRITER.readBusPacket()
+			if packet:
+				manage(packet)
 
-		# Check external messages
-		if WITH_API:
-			message = SESSION.checkExternalMessages()
-			if message and message != '{}':
-				manageExternalMessages(message)
+			# Check external messages
+			if WITH_API:
+				message = SESSION.checkExternalMessages()
+				if message and message != '{}':
+					manageExternalMessages(message)
 
-		time.sleep(TICK) # sleep a bit
+			time.sleep(TICK) # sleep a bit
+		except Exception, e:
+			# If an exception bubbles up this far, we've really messed up
+			logging.debug("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n%s" % e)
 
 # Shutdown pyBus
 def shutDown():
