@@ -125,8 +125,9 @@ class ibusFace ( ):
 		}
 		packet["src"] = self.readChar()
 
-		# If src is none, chances are we timed out
-		if not packet["src"]:
+		# If these are none, chances are we timed out
+		# Regardless, the packet is not useful
+		if not packet["src"] or not packet["len"] or not packet["dst"]:
 			return None
 
 		packet["len"] = self.readChar()
