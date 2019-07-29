@@ -160,7 +160,7 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 WRITER = None
 SESSION = None
 WITH_API = False
-MEDIA_HOST = "http://media.quinncasey.com:5353"
+MEDIA_HOST = "http://jaina.local:5353"
 
 #####################################
 # FUNCTIONS
