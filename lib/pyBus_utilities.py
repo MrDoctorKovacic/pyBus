@@ -1,0 +1,184 @@
+############################################################################
+# UTILITY FUNCTIONS
+# THESE ARE USED FOR INTERNAL OR EXTERNAL DIRECTIVES, 
+# OFTEN COMBINING SEVERAL IBUS WRITES INTO ONE FUNCTION
+#
+# TYPICALLY DIRECTIVES ARE REACTIVE, THESE UTLITIES ARE ACTIVE
+############################################################################
+
+import requests
+import pyBus_eventDriver as main
+import pyBus_directives as directives
+
+# Emulates pressing the "MODE" button on stereo
+# Very useful for changing back to AUX input without using the stock radio
+def pressMode():
+	# If you're switching to radio, 
+	# prepare to be spammed with Radio station song/artist/location/signal strength packets.
+	# This will probably freeze the WRITER for 10+ seconds
+	main.WRITER.writeBusPacket('F0', '68', ['48', '23']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', 'A3']) # release
+
+# Press number pad, 1-6
+# On radio this will switch to that assigned station
+# On aux this will adjust the gain
+def pressNumPad(number=6):
+	if(number == 1):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '11']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '91']) # release
+	elif(number == 2):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '01']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '81']) # release
+	elif(number == 3):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '12']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '92']) # release
+	elif(number == 4):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '02']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '82']) # release
+	elif(number == 5):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '13']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '93']) # release
+	elif(number == 6):
+		main.WRITER.writeBusPacket('F0', '68', ['48', '03']) # push
+		main.WRITER.writeBusPacket('F0', '68', ['48', '83']) # release
+
+# This switches to AM, I forget what pressing twice does
+def pressAM():
+	main.WRITER.writeBusPacket('F0', '68', ['48', '21']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', 'A1']) # release
+
+# This switches to FM, I forget what pressing twice does
+def pressFM():
+	main.WRITER.writeBusPacket('F0', '68', ['48', '31']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', 'B1']) # release
+
+# Presses next button on Radio, changing stations or songs
+def pressNext():
+	main.WRITER.writeBusPacket('F0', '68', ['48', '00']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', '80']) # release
+
+# Presses prev button on Radio, changing stations or songs
+def pressPrev():
+	main.WRITER.writeBusPacket('F0', '68', ['48', '10']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', '90']) # release
+
+# Presses on the left dial, turning stereo on & off
+def pressStereoPower():
+	main.WRITER.writeBusPacket('F0', '68', ['48', '06']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', '86']) # release
+
+# VERY loud, careful
+def turnOnAlarm():
+	main.WRITER.writeBusPacket('3F', '00', ['0C', '00', '55'])
+
+# Repeatedly flash low beam lights
+def flashLowBeams():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '04'])
+
+# Repeatedly flash low beam lights and hazards
+def flashLowBeamsAndHazards():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '06'])
+
+# Repeatedly flash high beam lights
+def flashHighBeams():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '08'])
+
+# Repeatedly flash high beam lights and hazards
+def flashHighBeamsAndHazards():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '0A'])
+
+# Repeatedly flash high beam lights and low beam lights
+def flashHighBeamsAndLowBeams():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '0C'])
+
+# Repeatedly flash high beam lights and low beam lights and hazards
+def flashAllExteriorLights():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '0E'])
+
+def turnOnHazards():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '02'])
+
+def turnOffAllExteriorLights():
+	main.WRITER.writeBusPacket('00', 'BF', ['76', '00'])
+
+def toggleInteriorLights():
+	main.WRITER.writeBusPacket('3F', '00', ['0C', '01', '01'])
+
+def toggleDoorLocks():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '34', '01'])
+
+def lockDriverDoor():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '47', '01'])
+
+def lockPassengerDoor():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '46', '01'])
+
+def lockDoors():
+	lockDriverDoor()
+	lockPassengerDoor()
+	directives.d_carLocked() # Trigger car locked function
+
+def openTrunk():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
+	main.SESSION.updateData("TRUNK_OPEN", True)
+
+### Roll windows up about 40%
+# Completely rolling up in one command is not possible
+# Rolling up 100% can be achieved by popping up about 2.5 times (3)
+def popWindowsUp():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '53', '01']) # Pop up window 1
+	main.WRITER.writeBusPacket('3F','00', ['0C', '55', '01']) # Pop up window 2
+	main.WRITER.writeBusPacket('3F','00', ['0C', '42', '01']) # Pop up window 3
+	main.WRITER.writeBusPacket('3F','00', ['0C', '43', '01']) # Pop up window 3
+
+### Roll windows down about 40%
+# Completely rolling down in one command is not possible
+# Rolling down 100% can be achieved by popping up about 2.5 times (3)
+def popWindowsDown():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '52', '01']) # Pop down window 1
+	main.WRITER.writeBusPacket('3F','00', ['0C', '54', '01']) # Pop down window 2
+	main.WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Pop down window 3
+	main.WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Pop down window 3
+
+# Not working, but seen in logs
+# Put Convertible Top Down
+def convertibleTopDown():
+	# These are the 3 packets sent by the vert module
+	# I realized these aren't directives, but rather progress updates
+	# 0%, 50%, and 100% respectively
+	#main.WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '72'])
+	#main.WRITER.writeBusPacket('9C', 'BF', ['7C', '04', '72'])
+	#main.WRITER.writeBusPacket('9C', 'BF', ['7C', '08', '72'])
+	pass
+
+# Not working, but seen in logs
+# Put Convertible Top Up
+def convertibleTopUp():
+	#main.WRITER.writeBusPacket('9C', 'BF', ['7C', '00', '71'])
+	pass
+
+# Tell IKE to set the time
+def setTime(day, month, year, hour, minute):
+	# Check inputs to make sure we don't break things:
+	for c in [day, month, year, hour, minute]:
+		if not isinstance(c, int) or c > 255 or c < 0:
+			return False
+
+	main.logging.info("Setting IKE time to {}/{}/{} {}:{}".format(day, month, year, hour, minute))
+
+	# Write Hours : Minutes
+	main.WRITER.writeBusPacket('3B', '80', ['40', '01', ('{:02x}'.format(hour)).upper(), ('{:02x}'.format(minute)).upper()])
+	# Write Day/Month/Year
+	main.WRITER.writeBusPacket('3B', '80', ['40', '02', ('{:02x}'.format(day)).upper(), ('{:02x}'.format(month)).upper(), ('{:02x}'.format(year)).upper()])
+
+	return True
+
+#################################################################
+
+# Send bluetooth command
+def sendBluetoothCommand(fetchURL):
+	try:
+		main.logging.debug(requests.get(fetchURL))
+	except Exception, e:
+		main.logging.debug("Failed to send GET request to "+fetchURL)
+		main.logging.debug(e)
