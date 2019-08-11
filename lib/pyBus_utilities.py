@@ -67,6 +67,15 @@ def pressStereoPower():
 	main.WRITER.writeBusPacket('F0', '68', ['48', '06']) # push
 	main.WRITER.writeBusPacket('F0', '68', ['48', '86']) # release
 
+def pressRecirculatingAir():
+	main.WRITER.writeBusPacket('50', '5B', ['3A', '01']) # push
+	main.WRITER.writeBusPacket('50', '5B', ['3A', '00']) # release
+
+# Opens rear trunk
+def openTrunk():
+	main.WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
+	main.SESSION.updateData("TRUNK_OPEN", True)
+
 # VERY loud, careful
 def turnOnAlarm():
 	main.WRITER.writeBusPacket('3F', '00', ['0C', '00', '55'])
@@ -118,9 +127,29 @@ def lockDoors():
 	lockPassengerDoor()
 	directives.d_carLocked() # Trigger car locked function
 
-def openTrunk():
-	main.WRITER.writeBusPacket('3F','00', ['0C', '02', '01'])
-	main.SESSION.updateData("TRUNK_OPEN", True)
+def requestDoorStatus():
+    main.WRITER.writeBusPacket('9C', '00', ['79'])
+
+def requestIgnitionStatus():
+    main.WRITER.writeBusPacket('00', '80', ['10'])
+
+def requestLampStatus():
+    main.WRITER.writeBusPacket('00', 'D0', ['5A'])
+
+def requestTimeStatus():
+	main.WRITER.writeBusPacket('A4', '80', ['41', '01', '01'])
+	
+def requestOdometer():
+	main.WRITER.writeBusPacket('44', '03', ['80', '16', 'D1'])
+
+def requestPDCStatus():
+	main.WRITER.writeBusPacket('3F', '60', ['1B'])
+
+def requestVehicleStatus():
+	main.WRITER.writeBusPacket('80', 'D0', ['53'])
+
+def requestTemperatureStatus():
+	main.WRITER.writeBusPacket('D0', '80', ['1D'])
 
 ### Roll windows up about 40%
 # Completely rolling up in one command is not possible
@@ -167,13 +196,29 @@ def setTime(day, month, year, hour, minute):
 	main.logging.info("Setting IKE time to {}/{}/{} {}:{}".format(day, month, year, hour, minute))
 
 	# Write Hours : Minutes
-	main.WRITER.writeBusPacket('3B', '80', ['40', '01', ('{:02x}'.format(hour)).upper(), ('{:02x}'.format(minute)).upper()])
+	main.WRITER.writeBusPacket('3B', '80', ['40', '01', dec2hex(hour), dec2hex(minute)])
 	# Write Day/Month/Year
-	main.WRITER.writeBusPacket('3B', '80', ['40', '02', ('{:02x}'.format(day)).upper(), ('{:02x}'.format(month)).upper(), ('{:02x}'.format(year)).upper()])
+	main.WRITER.writeBusPacket('3B', '80', ['40', '02', dec2hex(day), dec2hex(month), dec2hex(year[-2:4])])
 
 	return True
 
 #################################################################
+
+def dec2hex(decimal):
+    try:
+        return  ('{:02x}'.format(decimal)).upper()
+    except Exception, e:
+        main.logging.error("Failed to convert "+decimal+" to hex. Is it formatted correctly?")
+        main.logging.error(e)
+        return False
+
+def hex2bin(hexi):
+    try:
+        return bin(int(hexi, 16))[2:].zfill(len(hexi)*4)
+    except Exception, e:
+        main.logging.error("Failed to convert "+hexi+" to binary. Is it formatted correctly?")
+        main.logging.error(e)
+        return False
 
 # Send bluetooth command
 def sendBluetoothCommand(fetchURL):
