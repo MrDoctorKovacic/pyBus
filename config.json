@@ -1,6 +1,0 @@
-{
-    "CONFIG": {
-        "PYBUS_DEVICE" : "/dev/ttyUSB0",
-        "MDROID_HOST" : "http://localhost:5353"
-    }
-}
