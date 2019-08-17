@@ -97,6 +97,14 @@ LIST = {
 			'380801' : None
 		}
 	},
+	'72' : {
+		'BF' : {
+			'780000' : 'd_seatMemory', # One of the seat memory buttons were pushed
+			'780100' : 'd_seatMemory', # Button 1 released
+			'780200' : 'd_seatMemory', # Button 2 released
+			'780400' : 'd_seatMemory', # Button 3 released
+		}
+	},
 	'80' : {
 		'68' : { # Radio buttons
 			'31000007' : 'd_cdNext', # Seek > pressed
@@ -202,6 +210,19 @@ def d_topOpen(packet):
 # Whatever aux heating is
 def d_auxHeatingOff(packet):
 	main.SESSION.updateData("AUX_HEATING", False)
+
+# Called when driver seat memory buttons are pushed
+def d_seatMemory(packet):
+	if packet['dat'][1] == "00":
+		main.SESSION.updateData("SEAT_MEMORY_PUSHED", True)
+	else:
+		if packet['dat'][1] == "01": seatMemory = "SEAT_MEMORY_1"
+		elif packet['dat'][1] == "02": seatMemory = "SEAT_MEMORY_2"
+		elif packet['dat'][1] == "04": seatMemory = "SEAT_MEMORY_3"
+
+		if main.SESSION.data["SEAT_MEMORY_PUSHED"]:
+			main.SESSION.updateData("SEAT_MEMORY_PUSHED", False)
+			main.SESSION.updateData(seatMemory, True)
 
 # Called when doors are locked.
 def d_carLocked(packet = None):
