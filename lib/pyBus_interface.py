@@ -86,10 +86,12 @@ class ibusFace ( ):
 		self.SDEV.flushInput()
 		self.SDEV.lastWrite = int(round(time.time() * 1000))
 		self.PACKET_STACK = []
+		self.LOCKED = False
 		logging.debug("Initialized iBus")
 
 	# Wait for a significant delay in the bus before parsing stuff (signals separated by pauses)
 	def waitClearBus(self):
+		self.LOCKED = self.getLock()
 		logging.debug("Waiting for clear bus")
 		oldTime = time.time()
 		while True:
@@ -101,6 +103,7 @@ class ibusFace ( ):
 			if deltaTime > 0.1:
 				# If srcPacket is none, the serial read timed out, meaning the bus is both quiet and clear
 				if not srcPacket:
+					self.LOCKED = False
 					return
 
 				break # we have found a significant delay in signals, but have swallowed the first character in doing so.
@@ -113,9 +116,12 @@ class ibusFace ( ):
 			self.readChar()
 			dataLen = dataLen - 1
 		self.readChar() # XOR packet. This will be the last bit of the packet. I could change the while loop variable by one, but this adds clarity.
+		self.LOCKED = False
 
 	# Read a packet from the bus
 	def readBusPacket(self):
+		self.LOCKED = self.getLock()
+
 		packet = {
 			"src" : None,
 			"len" : None,
@@ -149,6 +155,7 @@ class ibusFace ( ):
 		packet['dat'] = dataTmp
 		packet['xor'] = self.readChar()
 		valStr = [packet['src'], packet['len'], packet['dst'], packet['dat'], packet['xor']]
+		self.LOCKED = False
 
 		if packet['dat']:
 			srcLocation = LOCATIONS[packet["src"]] if packet["src"] in LOCATIONS else packet["src"]
@@ -175,9 +182,11 @@ class ibusFace ( ):
 
 	# Write a string of data created from complete contents of packet
 	def writeFullPacket(self, packet):
+		self.LOCKED = self.getLock()
 		data = ''.join(chr(p) for p in packet)
 		self.SDEV.write(data)
 		self.SDEV.flush()
+		self.LOCKED = False
 
 	# get the checksum of a complete packet to be appended to the packet - I think everything listening on ibus checks these packets (except for this tool)
 	def getCheckSum(self, packet):
@@ -215,6 +224,12 @@ class ibusFace ( ):
 			else:
 				logging.debug("WRITE: WAIT")
 				time.sleep(0.01)
+
+	def getLock(self):
+		while(self.LOCKED): 
+			logging.debug("Waiting for lock")
+			time.sleep(1)
+		return True
 
 	def close(self):
 		self.SDEV.close()

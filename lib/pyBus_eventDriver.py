@@ -116,15 +116,15 @@ def listen():
 			if WITH_API:
 				message = SESSION.checkExternalMessages()
 				if message and message != '{}':
-					manageExternalMessages(message)
+					handleExternalMessages(message)
 
 			time.sleep(TICK) # sleep a bit
 		except Exception, e:
 			# If an exception bubbles up this far, we've really messed up
 			logging.error("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n%s" % e)
 
-# Handles various external messages, usually by calling an ibus directive
-def manageExternalMessages(message):
+# Handles various external messages recieved from the HTTP server
+def handleExternalMessages(message):
 	try:
 		# Check if we have raw data first
 		if message[0] == '[':
@@ -133,17 +133,25 @@ def manageExternalMessages(message):
 			if parsedList and len(parsedList) == 3 and len(parsedList[0]) == 2 and len(parsedList[1]) == 2:
 				parsedData = [parsedList[2][i:i+2] for i in range(0, len(parsedList[2]), 2)]
 				WRITER.writeBusPacket(parsedList[0], parsedList[1], parsedData)
+				response = "OK" # 10-4
 		else:
 			methodToCall = globals().get(message, None)
+
+			# Check if this function exists at all
+			if not methodToCall:
+				response = "Utility function {} does not exist".format(message)
+				logging.info("Sending response: {}".format(response))
+				return response
+
+			# Call the utility function
 			data = methodToCall()
 
 			# Either send (requested) data or an acknowledgement back to node
-			if data is not None:
-				response = json.dumps(data)
-			else:
-				response = "OK" # 10-4
+			response = json.dumps(data) if data else "OK"
 
 			logging.info("Sending response: {}".format(response))
+
+		return response
 
 	except Exception, e:
 		logging.error("Failed to call directive from external command.\n{}".format(e))
