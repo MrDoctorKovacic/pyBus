@@ -34,7 +34,7 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 WRITER = None
 SESSION = None
 WITH_API = False
-MEDIA_HOST = "http://jaina.local:5353"
+MEDIA_HOST = "http://lucio.local:5353"
 
 #####################################
 # FUNCTIONS
@@ -54,7 +54,6 @@ def init(writer, args):
 
 	# Start ibus writer
 	WRITER = writer
-	#pB_ticker.init(WRITER)
 
 	# Start PyBus logging Session
 	SESSION = pB_session.ibusSession(WITH_API)
@@ -113,10 +112,12 @@ def listen():
 				manage(packet)
 
 			# Check external messages
+			'''
 			if WITH_API:
 				message = SESSION.checkExternalMessages()
 				if message and message != '{}':
 					handleExternalMessages(message)
+			'''
 
 			time.sleep(TICK) # sleep a bit
 		except Exception, e:
