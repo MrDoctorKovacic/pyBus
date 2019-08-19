@@ -92,7 +92,7 @@ class ibusFace ( ):
 	# Wait for a significant delay in the bus before parsing stuff (signals separated by pauses)
 	def waitClearBus(self):
 		logging.debug("Waiting for clear bus")
-		self.LOCKED = self.getLock(threading.current_thread().ident, "waitClearBus")
+		self.LOCKED = self.getLock(threading.current_thread().name, "waitClearBus")
 		oldTime = time.time()
 		while True:
 			# Wait for large interval between packets
@@ -120,7 +120,7 @@ class ibusFace ( ):
 
 	# Read a packet from the bus
 	def readBusPacket(self):
-		self.LOCKED = self.getLock(threading.current_thread().ident, "readBusPacket")
+		self.LOCKED = self.getLock(threading.current_thread().name, "readBusPacket")
 
 		packet = {
 			"src" : None,
@@ -185,7 +185,7 @@ class ibusFace ( ):
 
 	# Write a string of data created from complete contents of packet
 	def writeFullPacket(self, packet):
-		self.LOCKED = self.getLock(threading.current_thread().ident, "writeFullPacket")
+		self.LOCKED = self.getLock(threading.current_thread().name, "writeFullPacket")
 		data = ''.join(chr(p) for p in packet)
 		self.SDEV.write(data)
 		self.SDEV.flush()
