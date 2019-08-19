@@ -72,8 +72,8 @@ def run():
 	pybusThread = threading.Thread(target=pB_eDriver.listen, args=(None,))
 
 	try:
-		serverThread.start()
 		pybusThread.start()
+		serverThread.start()
 	except Exception, e:
 		logging.error("Error: unable to start threads: %s" % e)
 		shutdown()
