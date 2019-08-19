@@ -10,7 +10,18 @@ import binascii
 import subprocess
 from time import strftime as date
 import thread
-from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+
+from http.server import BaseHTTPRequestHandler
+
+try:
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+except ImportError:
+    from http.server import SimpleHTTPRequestHandler
+
+try:
+    from SocketServer import TCPServer as HTTPServer
+except ImportError:
+    from http.server import HTTPServer
 
 sys.path.append( './lib/' )
 
