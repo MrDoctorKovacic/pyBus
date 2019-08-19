@@ -91,8 +91,8 @@ class ibusFace ( ):
 
 	# Wait for a significant delay in the bus before parsing stuff (signals separated by pauses)
 	def waitClearBus(self):
-		self.LOCKED = self.getLock(threading.current_thread().ident, "waitClearBus")
 		logging.debug("Waiting for clear bus")
+		self.LOCKED = self.getLock(threading.current_thread().ident, "waitClearBus")
 		oldTime = time.time()
 		while True:
 			# Wait for large interval between packets
@@ -230,9 +230,9 @@ class ibusFace ( ):
 
 	def getLock(self, thread, reason):
 		while(self.LOCKED): 
-			logging.debug("{}: waiting for lock".format(reason))
+			logging.debug("{} on {}: waiting for lock. Locked by {} at {}".format(reason, thread, self.LOCKED[1], self.LOCKED[0]))
 			time.sleep(1)
-		return thread
+		return [thread, reason]
 
 	def close(self):
 		self.SDEV.close()
