@@ -84,6 +84,9 @@ class pybusServer(BaseHTTPRequestHandler):
 
 # Server for handling external requests
 def startHTTPServer(kwargs):
-	server = HTTPServer(('', PORT_NUMBER), pybusServer)
-	server.serve_forever()
-	logging.info('Started pybus server on port {}'.format(PORT_NUMBER))
+	try:
+		server = HTTPServer(('', PORT_NUMBER), pybusServer)
+		logging.info('Started pybus server on port {}'.format(PORT_NUMBER))
+		server.serve_forever()
+	except Exception, e:
+		logging.error("Error in server: {}".format(e))
