@@ -111,18 +111,10 @@ def listen(kwargs):
 			if packet:
 				manage(packet)
 
-			# Check external messages
-			'''
-			if WITH_API:
-				message = SESSION.checkExternalMessages()
-				if message and message != '{}':
-					handleExternalMessages(message)
-			'''
-
 			time.sleep(TICK) # sleep a bit
 		except Exception, e:
 			# If an exception bubbles up this far, we've really messed up
-			logging.error("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n%s" % e)
+			logging.error("CAUGHT OTHERWISE FATAL ERROR IN MAIN THREAD:\n{}".format(e))
 
 # Handles various external messages recieved from the HTTP server
 def handleExternalMessages(message):
