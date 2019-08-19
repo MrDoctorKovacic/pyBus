@@ -89,4 +89,4 @@ def startHTTPServer(kwargs):
 		logging.info('Started pybus server on port {}'.format(PORT_NUMBER))
 		server.serve_forever()
 	except Exception, e:
-		logging.error("Error in server: {}".format(e))
+		print "Error in server: {}".format(e)
