@@ -268,6 +268,11 @@ def d_custom_IKE(packet):
 
 	# Sensor Status, broadcasted every 10 seconds
 	elif packetData[0] == '13':
+		# Haven't decoded this one yet
+		if packetData.join('') == "1303000000000014":
+			main.SESSION.updateData("HANDBRAKE", True)
+			main.SESSION.updateData("OIL_PRESSURE", "LOW")
+
 		main.SESSION.updateData("IKE_SENSOR_STATUS", (packetData[1]+packetData[2]+packetData[3]+packetData[4]+packetData[5]+packetData[6]+packetData[7]))
 
 		# Byte 7 holds temp in c
