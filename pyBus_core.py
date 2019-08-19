@@ -9,7 +9,7 @@ import logging
 import binascii
 import subprocess
 from time import strftime as date
-import thread
+import threading
 
 from http.server import BaseHTTPRequestHandler
 
@@ -65,15 +65,25 @@ def shutdown():
 		IBUS = None
 
 def run():
-	try:
-		# Open up HTTP server to listen on the network
-		thread.start_new_thread(startHTTPServer, (None,))
+	# Open up HTTP server to listen on the network
+	serverThread = threading.Thread(target=startHTTPServer, args=(None,))
 
-		# Start listening locally on serial bus
-		thread.start_new_thread(pB_eDriver.listen, (None,))
+	# Start listening locally on serial bus
+	pybusThread = threading.Thread(target=pB_eDriver.listen, args=(None,))
+
+	try:
+		serverThread.start()
+		pybusThread.start()
 	except Exception, e:
 		logging.error("Error: unable to start threads: %s" % e)
 		shutdown()
+
+	# Join threads
+	pybusThread.join()
+	serverThread.join()
+
+	# Stop
+	shutdown()
 
 # Additional HTTP server to recieve external messages
 class pybusServer(BaseHTTPRequestHandler):
