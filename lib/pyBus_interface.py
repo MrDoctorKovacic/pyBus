@@ -229,7 +229,7 @@ class ibusFace ( ):
 				time.sleep(0.01)
 
 	def getLock(self, thread, reason):
-		TIME_TO_SLEEP = 0.05
+		TIME_TO_SLEEP = 0.02
 
 		waits = 0
 		while(self.LOCKED):
