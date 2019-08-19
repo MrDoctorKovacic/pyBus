@@ -240,14 +240,14 @@ def d_carUnlocked(packet = None):
 # This isn't very often, especially on coupe models
 def d_passengerDoorLocked(packet):
 	main.SESSION.updateData("DOOR_LOCKED_PASSENGER", True)
-	if main.SESSION.data["DOOR_LOCKED_DRIVER"]:
+	if "DOOR_LOCKED_DRIVER" in main.SESSION.data and main.SESSION.data["DOOR_LOCKED_DRIVER"]:
 		main.SESSION.updateData("DOORS_LOCKED", True)
 
 # Called when ONLY DRIVER door is locked
 # This isn't very often, especially on coupe models
 def d_driverDoorLocked(packet):
 	main.SESSION.updateData("DOOR_LOCKED_DRIVER", True)
-	if main.SESSION.data["DOOR_LOCKED_PASSENGER"]:
+	if "DOOR_LOCKED_PASSENGER" in main.SESSION.data and main.SESSION.data["DOOR_LOCKED_PASSENGER"]:
 		main.SESSION.updateData("DOORS_LOCKED", True)
 
 # This packet is used to parse all messages from the IKE (instrument control electronics), as it contains speed/RPM info. 
