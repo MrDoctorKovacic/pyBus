@@ -229,9 +229,14 @@ class ibusFace ( ):
 				time.sleep(0.01)
 
 	def getLock(self, thread, reason):
-		while(self.LOCKED): 
-			logging.debug("{} on {}: waiting for lock. Locked by {} at {}".format(reason, thread, self.LOCKED[1], self.LOCKED[0]))
-			time.sleep(1)
+		TIME_TO_SLEEP = 0.05
+
+		waits = 0
+		while(self.LOCKED):
+			waits += 1
+			if not waits % 10: 
+				logging.debug("{}: waiting for lock. Locked by {} at {}".format(reason, self.LOCKED[1], self.LOCKED[0]))
+			time.sleep(TIME_TO_SLEEP)
 		return [thread, reason]
 
 	def close(self):
