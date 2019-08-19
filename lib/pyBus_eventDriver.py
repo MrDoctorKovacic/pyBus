@@ -102,7 +102,7 @@ def manage(packet):
 	return result
 
 # Listen for ibus messages, pass to packet manager if something substantial is found
-def listen():
+def listen(kwargs):
 	logging.info('Event listener initialized')
 	while True:
 		try:

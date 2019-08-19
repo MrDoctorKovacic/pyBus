@@ -83,7 +83,7 @@ class pybusServer(BaseHTTPRequestHandler):
 			self.send_error(404,'Error parsing utility: {}\n{}'.format(self.path, e))
 
 # Server for handling external requests
-def startHTTPServer():
+def startHTTPServer(kwargs):
 	server = HTTPServer(('', PORT_NUMBER), pybusServer)
 	logging.info('Started pybus server on port %s' , PORT_NUMBER)
 	server.serve_forever()
