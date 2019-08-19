@@ -134,17 +134,20 @@ class ibusFace ( ):
 		# If these are none, chances are we timed out
 		# Regardless, the packet is not useful
 		if not packet["src"]:
+			self.LOCKED = False
 			return None
 
 		packet["len"] = self.readChar()
 		packet["dst"] = self.readChar()
 
 		if not packet["len"] or not packet["dst"]:
+			self.LOCKED = False
 			return None
 
 		dataLen = int(packet['len'], 16) - 2
 		if dataLen > 20:
 			logging.critical("Length of +20 found, no useful packet is this long.. cleaning up")
+			self.LOCKED = False
 			self.waitClearBus()
 			return None
 
