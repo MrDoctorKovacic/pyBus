@@ -56,10 +56,10 @@ def shutdown():
 def run():
 	try:
 		# Open up HTTP server to listen on the network
-		thread.start_new_thread(startHTTPServer, None)
+		thread.start_new_thread(startHTTPServer, (None,))
 
 		# Start listening locally on serial bus
-		thread.start_new_thread(pB_eDriver.listen, None)
+		thread.start_new_thread(pB_eDriver.listen, (None,))
 	except Exception, e:
 		logging.error("Error: unable to start threads: %s" % e)
 		shutdown()
