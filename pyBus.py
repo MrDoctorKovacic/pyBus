@@ -16,33 +16,32 @@ import pyBus_core as core
 #####################################
 # Manage Ctrl+C gracefully
 def signal_handler_quit(signal, frame):
-  logging.info("Shutting down pyBus.")
-  core.shutdown()
-  sys.exit(0)
+	logging.info("Shutting down pyBus.")
+	core.shutdown()
+	sys.exit(0)
 
 # Print basic usage
 def print_usage():
-  print "Intended Use:"
-  print "%s <PATH_TO_DEVICE>" % (sys.argv[0])
-  print "Eg: %s /dev/ttyUSB0" % (sys.argv[0])
+	print "Intended Use:"
+	print "%s <PATH_TO_DEVICE>" % (sys.argv[0])
+	print "Eg: %s /dev/ttyUSB0" % (sys.argv[0])
   
 #################################
 # Configure Logging for pySel
 #################################
 def configureLogging(numeric_level):
-  if not isinstance(numeric_level, int):
-    numeric_level=0
-  logging.basicConfig(
-    level=numeric_level,
-    format='%(asctime)s [%(levelname)s in %(module)s] %(message)s', 
-    datefmt='%Y/%m/%dT%I:%M:%S'
-  )
+	if not isinstance(numeric_level, int):
+		numeric_level=0
+	logging.basicConfig(
+		level=numeric_level,
+		format='%(asctime)s [%(levelname)s in %(module)s] %(message)s', 
+		datefmt='%Y/%m/%dT%I:%M:%S')
   
 def createParser():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
-  parser.add_argument('--settings-file', action='store', help='Config file to load Device and API settings.')
-  return parser
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-v', '--verbose', action='store', default=20, type=int, help='Increases verbosity of logging.')
+	parser.add_argument('--settings-file', action='store', help='Config file to load Device and API settings.')
+	return parser
 
 #####################################
 # MAIN
@@ -90,10 +89,9 @@ if args.settings_file:
 logging.getLogger("requests").setLevel(logging.ERROR)
 
 try:
-  core.initialize(config)
-  core.run()
+	core.initialize(config)
+	core.run()
 except Exception:
-  logging.error("Caught unexpected exception:\n{}".format(traceback.format_exc()))
-
-logging.critical("And I'm dead.")    
-sys.exit(0)
+	logging.error("Caught unexpected exception:\n{}".format(traceback.format_exc()))
+	logging.critical("And I'm dead.")    
+	sys.exit(0)
