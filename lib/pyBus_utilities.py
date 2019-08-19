@@ -227,3 +227,6 @@ def sendBluetoothCommand(fetchURL):
 	except Exception, e:
 		main.logging.debug("Failed to send GET request to "+fetchURL)
 		main.logging.debug(e)
+
+def getUtilities():
+	return globals()

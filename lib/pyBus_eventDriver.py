@@ -87,7 +87,7 @@ def manage(packet):
 		
 	result = None
 	if methodName != None:
-		methodToCall = globals().get(methodName, None)
+		methodToCall = directives.getDirectives().get(methodName, None)
 		if methodToCall:
 			logging.info("Directive found for packet - %s" % methodName)
 			try:
@@ -128,7 +128,7 @@ def handleExternalMessages(message):
 				WRITER.writeBusPacket(parsedList[0], parsedList[1], parsedData)
 				response = "OK" # 10-4
 		else:
-			methodToCall = globals().get(message, None)
+			methodToCall = utils.getUtilities().get(message, None)
 
 			# Check if this function exists at all
 			if not methodToCall:

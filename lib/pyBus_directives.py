@@ -451,3 +451,6 @@ def meta_evalWindowDoor():
 			main.SESSION.updateData("WINDOWS_OPEN", False)
 		else:
 			main.SESSION.updateData("WINDOWS_OPEN", True)
+
+def getDirectives():
+	return globals()
