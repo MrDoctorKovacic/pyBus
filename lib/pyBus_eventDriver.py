@@ -6,7 +6,7 @@ import time
 import json
 import signal
 import random
-import logging as pybusLog
+import logging
 import traceback
 import datetime
 import requests
@@ -48,14 +48,14 @@ def init(writer, args):
 		WITH_API = args["with_api"]
 	else:
 		if args:
-			pybusLog.info("Not using MDroid API, despite finding the following config:")
-			pybusLog.info(str(args))
+			logging.info("Not using MDroid API, despite finding the following config:")
+			logging.info(str(args))
 		WITH_API = False
 
 	# Start ibus writer
 	WRITER = writer
 
-	# Start PyBus pybusLog Session
+	# Start PyBus logging Session
 	SESSION = pB_session.ibusSession(WITH_API)
 
 	# Turn on the 'clown nose' for 3 seconds
@@ -83,27 +83,27 @@ def manage(packet):
 			elif ('OTHER' in dstDir.keys()):
 				methodName = dstDir['OTHER']
 	except Exception, e:
-		pybusLog.debug("Exception from packet manager [%s]" % e)
+		logging.debug("Exception from packet manager [%s]" % e)
 		
 	result = None
 	if methodName != None:
 		methodToCall = directives.getDirectives().get(methodName, None)
 		if methodToCall:
-			pybusLog.info("Directive found for packet - %s" % methodName)
+			logging.info("Directive found for packet - %s" % methodName)
 			try:
 				result = methodToCall(packet)
 			except:
-				pybusLog.error("Exception raised from [%s]" % methodName)
-				pybusLog.error(traceback.format_exc())
+				logging.error("Exception raised from [%s]" % methodName)
+				logging.error(traceback.format_exc())
 		
 		else:
-			pybusLog.warning("Method (%s) does not exist" % methodName)
+			logging.warning("Method (%s) does not exist" % methodName)
 
 	return result
 
 # Listen for ibus messages, pass to packet manager if something substantial is found
 def listen(kwargs):
-	pybusLog.info('Event listener initialized')
+	logging.info('Event listener initialized')
 	while True:
 		try:
 			# Grab packet and manage appropriately
@@ -133,7 +133,7 @@ def handleExternalMessages(message):
 			# Check if this function exists at all
 			if not methodToCall:
 				response = "Utility function {} does not exist".format(message)
-				pybusLog.info("Sending response: {}".format(response))
+				logging.info("Sending response: {}".format(response))
 				return response
 
 			# Call the utility function
@@ -142,14 +142,14 @@ def handleExternalMessages(message):
 			# Either send (requested) data or an acknowledgement back to node
 			response = json.dumps(data) if data else "OK"
 
-			pybusLog.info("Sending response: {}".format(response))
+			logging.info("Sending response: {}".format(response))
 
 		return response
 
 	except Exception, e:
-		pybusLog.error("Failed to call directive from external command.\n{}".format(e))
+		logging.error("Failed to call directive from external command.\n{}".format(e))
 
 # Shutdown pyBus
 def shutDown():
-	pybusLog.info("Killing tick utility.")
+	logging.info("Killing tick utility.")
 	#pB_ticker.shutDown()
