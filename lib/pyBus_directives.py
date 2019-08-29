@@ -293,7 +293,8 @@ def d_custom_IKE(packet):
 	# Temperature Status, broadcasted every 10 seconds
 	elif packetData[0] == '19':
 		main.SESSION.updateData("OUTSIDE_TEMP", int(packetData[1], 16))
-		main.SESSION.updateData("COOLANT_TEMP", int(packetData[2], 16))
+		if int(packetData[2], 16) != 128:
+			main.SESSION.updateData("COOLANT_TEMP", int(packetData[2], 16))
 
 		# Only for european models I believe, or if you've set this to be tracked with INPA/NCS. Otherwise 0
 		main.SESSION.updateData("OIL_TEMP", int(packetData[3], 16))
