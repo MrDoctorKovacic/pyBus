@@ -220,8 +220,8 @@ def hex2bin(hexi):
         main.logging.error(e)
         return False
 
-# Send bluetooth command
-def sendBluetoothCommand(fetchURL):
+# Send command / request
+def sendRequest(fetchURL):
 	try:
 		main.logging.debug(requests.get(fetchURL))
 	except Exception, e:

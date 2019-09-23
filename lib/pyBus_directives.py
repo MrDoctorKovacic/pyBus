@@ -191,12 +191,12 @@ def d_keyOut(packet):
 	main.SESSION.updateData("RPM", 0)
 	main.SESSION.updateData("SPEED", 0)
 	if main.MEDIA_HOST: 
-		utils.sendBluetoothCommand(main.MEDIA_HOST+"/bluetooth/disconnect")
+		utils.sendRequest(main.MEDIA_HOST+"/bluetooth/disconnect")
 
 def d_keyIn(packet):
 	main.SESSION.updateData("KEY_STATE", True)
 	if main.MEDIA_HOST: 
-		utils.sendBluetoothCommand(main.MEDIA_HOST+"/bluetooth/connect")
+		utils.sendRequest(main.MEDIA_HOST+"/bluetooth/connect")
 
 # If sunroof / convertible top is closed
 def d_topClosed(packet):
@@ -216,9 +216,12 @@ def d_seatMemory(packet):
 	if packet['dat'][1] == "00":
 		main.SESSION.updateData("SEAT_MEMORY_PUSHED", True)
 	else:
-		if packet['dat'][1] == "01": seatMemory = "SEAT_MEMORY_1"
-		elif packet['dat'][1] == "02": seatMemory = "SEAT_MEMORY_2"
-		elif packet['dat'][1] == "04": seatMemory = "SEAT_MEMORY_3"
+		if packet['dat'][1] == "01": 
+			seatMemory = "SEAT_MEMORY_1"
+		elif packet['dat'][1] == "02": 
+			seatMemory = "SEAT_MEMORY_2"
+		elif packet['dat'][1] == "04": 
+			seatMemory = "SEAT_MEMORY_3"
 
 		if main.SESSION.data["SEAT_MEMORY_PUSHED"]:
 			main.SESSION.updateData("SEAT_MEMORY_PUSHED", False)
@@ -406,7 +409,7 @@ def d_diagnostic(packet):
 
 def d_togglePause(packet):
 	if main.MEDIA_HOST: 
-		utils.sendBluetoothCommand(main.MEDIA_HOST+"/bluetooth/pause")
+		utils.sendRequest(main.MEDIA_HOST+"/bluetooth/pause")
 
 def d_cdNext(packet):
 	pass
@@ -416,11 +419,11 @@ def d_cdPrev(packet):
 
 def d_steeringNext(packet):
 	if main.MEDIA_HOST: 
-		utils.sendBluetoothCommand(main.MEDIA_HOST+"/bluetooth/next")
+		utils.sendRequest(main.MEDIA_HOST+"/bluetooth/next")
 
 def d_steeringPrev(packet):
 	if main.MEDIA_HOST: 
-		utils.sendBluetoothCommand(main.MEDIA_HOST+"/bluetooth/prev")
+		utils.sendRequest(main.MEDIA_HOST+"/bluetooth/prev")
 
 def d_steeringRT(packet):
 	utils.pressMode()
