@@ -128,6 +128,9 @@ def handleExternalMessages(message):
 				WRITER.writeBusPacket(parsedList[0], parsedList[1], parsedData)
 				response = "OK" # 10-4
 		else:
+			if message[0] == "/":
+				message = message[1:len(message)]
+			logging.info("Recieved message: {}".format(message))
 			methodToCall = utils.getUtilities().get(message, None)
 
 			# Check if this function exists at all
