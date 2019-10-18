@@ -183,6 +183,10 @@ def popWindowsDown():
 	main.WRITER.writeBusPacket('3F','00', ['0C', '41', '01']) # Pop down window 3
 	main.WRITER.writeBusPacket('3F','00', ['0C', '44', '01']) # Pop down window 3
 
+# Turns on the clown nose for 3 seconds
+def turnOnClownNose():
+	main.WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
+
 # Not working, but seen in logs
 # Put Convertible Top Down
 def convertibleTopDown():

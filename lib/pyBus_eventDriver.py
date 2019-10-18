@@ -59,7 +59,7 @@ def init(writer, args):
 	SESSION = pB_session.ibusSession(WITH_API)
 
 	# Turn on the 'clown nose' for 3 seconds
-	WRITER.writeBusPacket('3F', '00', ['0C', '4E', '01'])
+	utils.turnOnClownNose()
 
 	# Set date/time. Redundant, but helps easily diagnose what time the Pi THINKS it is
 	now = datetime.datetime.now()
