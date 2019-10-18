@@ -42,6 +42,20 @@ def pressNumPad(number=6):
 		main.WRITER.writeBusPacket('F0', '68', ['48', '03']) # push
 		main.WRITER.writeBusPacket('F0', '68', ['48', '83']) # release
 
+# Press number functions, for easy server access
+def press1():
+	pressNumPad(1)
+def press2():
+	pressNumPad(2)
+def press3():
+	pressNumPad(3)
+def press4():
+	pressNumPad(4)
+def press5():
+	pressNumPad(5)
+def press6():
+	pressNumPad(6)
+
 # This switches to AM, I forget what pressing twice does
 def pressAM():
 	main.WRITER.writeBusPacket('F0', '68', ['48', '21']) # push
