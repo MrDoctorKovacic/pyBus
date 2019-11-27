@@ -37,12 +37,12 @@ class ibusSession():
 			# Ignore speed and RPM / SPEED
 			if key is not "RPM" and key is not "SPEED":
 				url = self.API+"/session/"+key
-				dataString = '{"value": "'+data+'"}'
-				r = requests.post(url, json=dataString, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
+				dataString = {"value": data}
+				r = requests.post(url, json=dataString, headers={'Content-type': 'application/json'})
 				if r.status_code != 200:
 					logging.debug("API request failed during data POST: "+r.reason)
 					logging.debug(url)
-					logging.debug(dataString)
+					logging.debug(r.json)
 
 	# Checks for any external messages sent to socket,
 	def checkExternalMessages(self):
