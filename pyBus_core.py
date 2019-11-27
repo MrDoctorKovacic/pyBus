@@ -91,6 +91,11 @@ class pybusServer(BaseHTTPRequestHandler):
 	# Handler for the GET requests
 	def do_GET(self):
 		try:
+			if self.path == "/":
+				self.send_response(200)
+				self.wfile.write("OK")
+				return
+
 			utilityResponse = pB_eDriver.handleExternalMessages(self.path.replace("/", ""))
 			if utilityResponse == "OK":
 				self.send_response(200)
