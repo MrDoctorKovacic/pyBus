@@ -36,9 +36,13 @@ class ibusSession():
 		if self.API:
 			# Ignore speed and RPM / SPEED
 			if key is not "RPM" and key is not "SPEED":
-				r = requests.post(self.API+"/session/"+key, json={"value": data}, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
+				url = self.API+"/session/"+key
+				dataString = {"value": data}
+				r = requests.post(url, json=dataString, headers={'Content-type': 'application/json', 'Accept': 'text/plain'})
 				if r.status_code != 200:
-					logging.debug("Failed to POST data to API: "+r.reason)
+					logging.debug("API request failed during data POST: "+r.reason)
+					logging.debug(url)
+					logging.debug(dataString)
 
 	# Checks for any external messages sent to socket,
 	def checkExternalMessages(self):
@@ -51,4 +55,4 @@ class ibusSession():
 					logging.info("Got External Message: {}".format(message))
 				return message
 			else:
-				logging.debug("Failed to POST data to API: "+r.reason)
+				logging.debug("API request failed during external messages GET: "+r.reason)
