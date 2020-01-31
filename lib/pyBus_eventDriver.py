@@ -34,7 +34,7 @@ TICK = 0.04 # sleep interval in seconds used between iBUS reads
 WRITER = None
 SESSION = None
 WITH_API = False
-MEDIA_HOST = "http://localhost:5354"
+MEDIA_HOST = "http://localhost:5353"
 
 #####################################
 # FUNCTIONS
