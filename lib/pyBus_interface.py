@@ -204,6 +204,11 @@ class ibusFace ( ):
 	# TODO: Read to verify the packet we send is seen
 	def writeBusPacket(self, src, dst, data):
 		time.sleep(0.01) # pause a tick
+
+		# Check if system is woken up
+		if (int(round(time.time() * 1000)) - self.SDEV.lastWrite > 1000:
+			self.writeBusPacket(self, '44', '80', '16') # request odometer to wake devices up
+
 		length = '%02X' % (2 + len(data))
 		packet = [src, length, dst]
 		for p in data:
