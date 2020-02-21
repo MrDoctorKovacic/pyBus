@@ -97,7 +97,7 @@ class pybusServer(BaseHTTPRequestHandler):
 				self.wfile.write("OK")
 				return
 
-			utilityResponse = pB_eDriver.handleExternalMessages(unquote(self.path).replace("/", "")))
+			utilityResponse = pB_eDriver.handleExternalMessages(unquote(self.path).replace("/", ""))
 			if utilityResponse == "OK":
 				self.send_response(200)
 				self.end_headers()
