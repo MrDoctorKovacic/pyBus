@@ -67,7 +67,7 @@ LIST = {
 			'3BA0' : None # Dial button, released
 		},
 		'FF' : {
-			'3B40' : 'd_steeringRT' # also RT Button?
+			'3B40' : 'd_steeringRT', # also RT Button?
 			'3B00' : 'd_steeringRT'
 		}
 	},
