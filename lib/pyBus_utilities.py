@@ -18,6 +18,8 @@ def pressMode():
 	# This will probably freeze the WRITER for 10+ seconds
 	main.WRITER.writeBusPacket('F0', '68', ['48', '23']) # push
 	main.WRITER.writeBusPacket('F0', '68', ['48', 'A3']) # release
+	main.WRITER.writeBusPacket('F0', '68', ['48', '23']) # push
+	main.WRITER.writeBusPacket('F0', '68', ['48', 'A3']) # release
 
 # Press number pad, 1-6
 # On radio this will switch to that assigned station
