@@ -68,6 +68,7 @@ LIST = {
 		},
 		'FF' : {
 			'3B40' : 'd_steeringRT' # also RT Button?
+			'3B00' : 'd_steeringRT'
 		}
 	},
 	'5B' : {
