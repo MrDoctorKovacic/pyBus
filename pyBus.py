@@ -34,8 +34,8 @@ def configureLogging(numeric_level):
 		numeric_level=0
 	logging.basicConfig(
 		level=numeric_level,
-		format='%(asctime)s [%(levelname)s in %(threadName)s] %(message)s', 
-		datefmt='%Y/%m/%dT%I:%M:%S')
+		format='[%(levelname)s in %(threadName)s] %(message)s', 
+		datefmt='')
   
 def createParser():
 	parser = argparse.ArgumentParser()
