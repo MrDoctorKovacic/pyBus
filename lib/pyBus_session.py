@@ -26,11 +26,8 @@ class ibusSession():
 
 	# Allows for easier logging of update timing
 	def updateData(self, key, data):
-		key = str(key).upper()
-		data = str(data).upper()
-
 		# Keep a copy in our local dict
-		self.data[key] = data
+		self.data[str(key).upper()] = str(data).upper()
 
 		# Write entry to main REST server
 		if self.API:
