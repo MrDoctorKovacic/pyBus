@@ -1,6 +1,4 @@
-MDroid: pyBus
-=====
-### Forked from ezeakeal's excellent [pyBus](https://github.com/ezeakeal/pyBus)
+# I'm archiving this fork in favor of my more streamlined Go port [gokbus](https://github.com/qcasey/gokbus)
 
 I-BUS interface for my E46 BMW written in Python 2.7. BMW's I-BUS (DE: K-BUS) is a proprietary serial communication line similar to CAN, but used primarily for exchanges between "non-essential" modules like A/C or radio. [Here's a great writeup.](https://curious.ninja/blog/arduino-bmw-i-bus-interface-technical-details/) 
 
